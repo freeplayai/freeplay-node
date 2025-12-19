@@ -1,73 +1,127 @@
-# Freeplay Node SDK
+<h1 align="center">Freeplay Node.js SDK</h1>
 
-The official Node SDK for easily accessing the Freeplay API.
+<p align="center">
+  <strong>The official Node.js/TypeScript SDK for the <a href="https://freeplay.ai">Freeplay</a> platform</strong>
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/freeplay"><img src="https://img.shields.io/npm/v/freeplay.svg" alt="npm version" /></a>
+  <a href="https://github.com/freeplayai/freeplay-node/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License" /></a>
+</p>
+
+<p align="center">
+  <a href="https://docs.freeplay.ai">Documentation</a> •
+  <a href="#installation">Installation</a> •
+  <a href="#quick-start">Quick Start</a> •
+  <a href="CONTRIBUTING.md">Contributing</a>
+</p>
+
+---
+
+Freeplay helps teams build, test, and optimize LLM-powered applications. This SDK enables you to:
+
+- **Manage prompts** — Version and retrieve prompt templates across environments
+- **Record interactions** — Log LLM calls for observability and debugging
+- **Track sessions** — Group related interactions together
+- **Run evaluations** — Execute test runs against your prompts
+- **Capture feedback** — Collect customer feedback on responses
+- **Trace agents** — Monitor multi-step agent workflows
 
 ## Installation
 
-```
+```bash
 npm install freeplay
 ```
 
-## Compatibility
+## Quick Start
 
-- Node.js v10+
+```typescript
+import Freeplay, { getCallInfo, getSessionInfo } from "freeplay";
+import OpenAI from "openai";
 
-## Usage
-
-```js
-// Import the SDK
-import * as freeplay from "freeplay";
-
-// Initialize the client
-const fpclient = new freeplay.Freeplay({
-  freeplayApiKey: FREEPLAY_API_KEY,
-  baseUrl: `https://${FREEPLAY_CUSTOMER_NAME}.freeplay.ai/api`,
-  providerConfig: {
-    openai: {
-      apiKey: OPENAI_API_KEY,
-    },
-  },
+// Initialize clients
+const freeplay = new Freeplay({
+  freeplayApiKey: process.env.FREEPLAY_API_KEY,
+  baseUrl: `https://${process.env.FREEPLAY_CUSTOMER}.freeplay.ai/api`,
 });
 
-// Examples
-const completion = await fpclient.getCompletion({
-  projectId: FREEPLAY_PROJECT_ID,
-  templateName: "template",
-  variables: {
-    ["input_variable_name"]: "input_variable_value",
-  },
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// Create a session for grouping interactions
+const session = freeplay.sessions.create();
+
+// Get your prompt from Freeplay
+const prompt = await freeplay.prompts.getFormatted({
+  projectId: process.env.FREEPLAY_PROJECT_ID,
+  templateName: "my-prompt",
+  environment: "prod",
+  variables: { user_input: "Hello, world!" },
+});
+
+// Call your LLM provider
+const start = new Date();
+const response = await openai.chat.completions.create({
+  model: prompt.promptInfo.model,
+  messages: prompt.llmPrompt,
+  ...prompt.promptInfo.modelParameters,
+});
+const end = new Date();
+
+// Record the interaction
+await freeplay.recordings.create({
+  projectId: process.env.FREEPLAY_PROJECT_ID,
+  allMessages: prompt.allMessages({
+    role: "assistant",
+    content: response.choices[0].message.content,
+  }),
+  inputs: { user_input: "Hello, world!" },
+  sessionInfo: getSessionInfo(session),
+  promptVersionInfo: prompt.promptInfo,
+  callInfo: getCallInfo(prompt.promptInfo, start, end),
+  responseInfo: { isComplete: true },
 });
 ```
 
-See the [Freeplay Docs](https://docs.freeplay.ai) for more usage examples and the API reference.
+## Documentation
 
-## License
+For comprehensive documentation and examples, visit **[docs.freeplay.ai](https://docs.freeplay.ai)**.
 
-This SDK is released under the [MIT License](LICENSE).
+## Requirements
+
+- Node.js 18 or higher
+- A [Freeplay](https://freeplay.ai) account and API key
+
+## Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+- **Bug reports** — [Open an issue](https://github.com/freeplayai/freeplay-node/issues)
+- **Security issues** — Email [security@freeplay.ai](mailto:security@freeplay.ai)
 
 ## Development
 
-Install and audit allowed lifecycle scripts:
-
-```
+```bash
+# Install dependencies
 npm run safe-install
-```
 
-Run tests:
-
-```
+# Run tests
 npm test
+
+# Build
+npm run build
+
+# Lint and format
+npm run lint:fix
 ```
 
-### LavaMoat: Install-time protections
+## License
 
-We use LavaMoat's allow-scripts to prevent arbitrary lifecycle scripts from running during npm installs.
+This SDK is released under the [Apache 2.0 License](LICENSE).
 
-- **Default behavior**: the repo includes an `.npmrc` with `ignore-scripts=true`, so install steps do not execute package scripts by default.
-- **Key npm script in `package.json`**:
-  - `allow-scripts:run`: runs only allowlisted lifecycle scripts via allow-scripts
-- **CI usage**:
-  - Install: `npm run safe-install`
-  - Build and test: standard `npm run build` and `npm test`
+---
 
-Running install with new dependencies requiring config changes will fail and be listed under "packages missing configuration:". Add the package to the config and default to false unless absolutely necessary for the library to work.
+<p align="center">
+  Built with ❤️ by the <a href="https://freeplay.ai">Freeplay</a> team
+</p>
