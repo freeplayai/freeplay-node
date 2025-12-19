@@ -1,0 +1,19 @@
+{
+  "type": "commonjs",
+  "dependencies": {
+    "freeplay": "file:../.."
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "openai": "^6.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2",
+    "zod": "^4.1.11"
+  },
+  "scripts": {
+    "example": "source ../../.env && ts-node testRunExampleOpenAI.ts",
+    "test-run": "source ../../.env && ts-node testRunWithAgentDataset.ts",
+    "vertex": "source ../../.env && ts-node vertexGeminiTools.ts",
+    "nested-traces": "source ../../.env && ts-node traceWithParentId.ts"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "content": [
+    {
+      "content": "Answer the question to the best of your ability with truthful information, while being entertaining.",
+      "role": "system"
+    },
+    {
+      "kind": "history"
+    },
+    {
+      "content": "{{question}}",
+      "role": "user"
+    }
+  ],
+  "format_version": 2,
+  "metadata": {
+    "flavor": "anthropic_chat",
+    "model": "claude-2.1",
+    "params": {
+      "max_tokens_to_sample": 12,
+      "temperature": 0.15
+    },
+    "provider": "anthropic",
+    "provider_info": {}
+  },
+  "prompt_template_id": "e8c69d70-1166-4546-8a60-cf4684a3a66b",
+  "prompt_template_name": "test-prompt-with-history",
+  "prompt_template_version_id": "41ee9a25-0e7a-4c0b-a42b-4b5239721d7b"
+}

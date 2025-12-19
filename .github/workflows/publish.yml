@@ -1,0 +1,113 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Perform a dry run (skip actual publishing)"
+        type: boolean
+        default: false # Change to true when testing publish workflow
+      release_type:
+        description: "Type of release"
+        type: choice
+        options:
+          - prerelease
+          - stable
+        default: prerelease
+
+concurrency:
+  group: "publish-npm"
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed for creating releases
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: npm run safe-install
+
+      - name: Determine release version
+        id: version
+        run: |
+          # Run the TypeScript version determination script
+          VERSION_OUTPUT=$(npx tsx scripts/determine-version.ts ${{ github.event.inputs.release_type }})
+          echo "$VERSION_OUTPUT"
+
+          # Extract JSON output (line starting with RESULT_JSON:)
+          VERSION_JSON=$(echo "$VERSION_OUTPUT" | grep "RESULT_JSON:" | sed 's/RESULT_JSON://')
+
+          # Parse and set outputs
+          CURRENT_VERSION=$(echo "$VERSION_JSON" | jq -r '.current_version')
+          BASE_VERSION=$(echo "$VERSION_JSON" | jq -r '.base_version')
+          NEW_VERSION=$(echo "$VERSION_JSON" | jq -r '.new_version')
+          IS_PRERELEASE=$(echo "$VERSION_JSON" | jq -r '.is_prerelease')
+
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "base_version=$BASE_VERSION" >> $GITHUB_OUTPUT
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
+
+      - name: Update package.json version
+        if: github.event.inputs.release_type == 'prerelease'
+        run: |
+          npm version ${{ steps.version.outputs.new_version }} --no-git-tag-version
+
+      - name: Run tests
+        run: npm test
+        env:
+          FREEPLAY_API_URL: ${{ secrets.FREEPLAY_API_URL }}
+          FREEPLAY_PROJECT_ID: ${{ secrets.FREEPLAY_PROJECT_ID }}
+          EXAMPLES_PROJECT_ID: ${{ secrets.EXAMPLES_PROJECT_ID }}
+          FREEPLAY_API_KEY: ${{ secrets.FREEPLAY_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+      - name: Build package
+        run: npm run build
+
+      - name: Publish to npm (dry run)
+        if: github.event.inputs.dry_run == 'true'
+        run: |
+          echo "🔍 DRY RUN - Would publish version: ${{ steps.version.outputs.new_version }}"
+          npm publish --dry-run --ignore-scripts
+          echo "✅ Dry run completed successfully"
+
+      - name: Publish to npm
+        if: github.event.inputs.dry_run == 'false'
+        run: |
+          if [ "${{ steps.version.outputs.is_prerelease }}" = "true" ]; then
+            npm publish --tag alpha --ignore-scripts
+          else
+            npm publish --ignore-scripts
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        if: github.event.inputs.dry_run == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.new_version }}
+          name: Release v${{ steps.version.outputs.new_version }}
+          draft: false
+          prerelease: ${{ github.event.inputs.release_type == 'prerelease' }}
+          body: |
+            Release v${{ steps.version.outputs.new_version }}
+
+            Published to npm: https://www.npmjs.com/package/freeplay/v/${{ steps.version.outputs.new_version }}

@@ -1,0 +1,9 @@
+{
+  "type": "commonjs",
+  "dependencies": {
+    "freeplay": "file:../.."
+  },
+  "scripts": {
+    "example": "node example.js"
+  }
+}

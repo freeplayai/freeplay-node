@@ -1,0 +1,58 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm run safe-install
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build package
+        run: npm run build
+
+      - name: Install example dependencies
+        run: |
+          cd examples && npm install
+          cd cjs && npm install
+          cd ../ts-cjs && npm install
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+        env:
+          FREEPLAY_API_URL: ${{ secrets.FREEPLAY_API_URL }}
+          FREEPLAY_PROJECT_ID: ${{ secrets.FREEPLAY_PROJECT_ID }}
+          EXAMPLES_PROJECT_ID: ${{ secrets.EXAMPLES_PROJECT_ID }}
+          FREEPLAY_API_KEY: ${{ secrets.FREEPLAY_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

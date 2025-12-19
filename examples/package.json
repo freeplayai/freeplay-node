@@ -1,0 +1,23 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.901.0",
+    "@aws-sdk/client-sagemaker-runtime": "^3.574.0",
+    "@google-cloud/vertexai": "^1.2.0",
+    "@google/generative-ai": "^0.24.0",
+    "freeplay": "file:..",
+    "lodash": "^4.17.21"
+  },
+  "scripts": {
+    "sdk": "node src/sdk.js",
+    "history": "node src/history.js",
+    "streaming": "node src/streaming.js",
+    "continuousChat": "node src/continuousChat.js",
+    "customMetadata": "node src/customMetadata.js",
+    "functionCalling": "node src/functionCalling.js"
+  },
+  "devDependencies": {
+    "node-fetch": "^3.3.2",
+    "zod": "^4"
+  }
+}
