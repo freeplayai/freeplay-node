@@ -2,7 +2,7 @@
 
 Notable additions, fixes, or breaking changes to the Freeplay SDK.
 
-## [Unreleased]
+## [0.5.3] - 2025-12-22
 
 ### Added
 
