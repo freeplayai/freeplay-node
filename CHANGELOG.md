@@ -1,3 +1,4 @@
+
 # Changelog
 
 Notable additions, fixes, or breaking changes to the Freeplay SDK.
