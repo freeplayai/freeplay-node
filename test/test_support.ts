@@ -444,6 +444,33 @@ export const mockUpdateTraceFeedback = (
     )
     .reply(201, {});
 
+const mockUpdateSessionMetadata = (
+  axiosMock: MockAdapter,
+  projectId: string,
+  sessionId: string,
+  status: number = 200,
+  responseBody: object = { message: "Metadata updated successfully" },
+) =>
+  axiosMock
+    .onPatch(
+      `http://localhost:8080/api/v2/projects/${projectId}/sessions/id/${sessionId}/metadata`,
+    )
+    .reply(status, responseBody);
+
+const mockUpdateTraceMetadata = (
+  axiosMock: MockAdapter,
+  projectId: string,
+  sessionId: string,
+  traceId: string,
+  status: number = 200,
+  responseBody: object = { message: "Metadata updated successfully" },
+) =>
+  axiosMock
+    .onPatch(
+      `http://localhost:8080/api/v2/projects/${projectId}/sessions/${sessionId}/traces/id/${traceId}/metadata`,
+    )
+    .reply(status, responseBody);
+
 const mockRecordTrace = (
   axiosMock: MockAdapter,
   projectId: string,
@@ -525,5 +552,7 @@ export {
   mockRecordTrace,
   mockRecordUpdate,
   mockUpdateCustomerFeedback,
+  mockUpdateSessionMetadata,
+  mockUpdateTraceMetadata,
   requireEnv,
 };

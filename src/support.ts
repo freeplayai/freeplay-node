@@ -439,6 +439,39 @@ export class CallSupport {
     }
   }
 
+  async updateSessionMetadata(
+    projectId: string,
+    sessionId: string,
+    metadata: CustomMetadata,
+  ): Promise<void> {
+    const url = `v2/projects/${projectId}/sessions/id/${sessionId}/metadata`;
+    try {
+      await this.httpPatch(url, metadata);
+    } catch (e: any) {
+      throw freeplayError(
+        `Unable to update session metadata for session ${sessionId} in project ${projectId}`,
+        e,
+      );
+    }
+  }
+
+  async updateTraceMetadata(
+    projectId: string,
+    sessionId: string,
+    traceId: string,
+    metadata: CustomMetadata,
+  ): Promise<void> {
+    const url = `v2/projects/${projectId}/sessions/${sessionId}/traces/id/${traceId}/metadata`;
+    try {
+      await this.httpPatch(url, metadata);
+    } catch (e: any) {
+      throw freeplayError(
+        `Unable to update trace metadata for trace ${traceId} in project ${projectId}`,
+        e,
+      );
+    }
+  }
+
   async httpGet<R = any>(url: string): Promise<AxiosResponse<R>> {
     return await axios.get(`${this.freeplayURL}/${url}`, this.axiosConfig);
   }
@@ -468,6 +501,17 @@ export class CallSupport {
 
   async httpDelete<R = any>(url: string): Promise<AxiosResponse<R>> {
     return axios.delete(`${this.freeplayURL}/${url}`, this.axiosConfig);
+  }
+
+  async httpPatch<D = any, R = any>(
+    url: string,
+    body: D,
+  ): Promise<AxiosResponse<R>> {
+    return await axios.patch(
+      `${this.freeplayURL}/${url}`,
+      body,
+      this.axiosConfig,
+    );
   }
 
   static validateBasicMap(metadata: Record<string, CustomFeedback>): void {

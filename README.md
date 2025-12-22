@@ -84,8 +84,45 @@ await freeplay.recordings.create({
 });
 ```
 
-## Documentation
+### Updating Metadata
 
+Update session and trace metadata after creation. This is useful for associating IDs and metadata generated after a conversation ends (e.g., ticket IDs, summary IDs, resolution status).
+
+#### Update Session Metadata
+
+```typescript
+await fpclient.metadata.updateSession({
+  projectId: "550e8400-e29b-41d4-a716-446655440000",
+  sessionId: "660e8400-e29b-41d4-a716-446655440000",
+  metadata: {
+    customer_id: "cust_123",
+    conversation_rating: 5,
+    support_tier: "premium",
+  },
+});
+```
+
+#### Update Trace Metadata
+
+```typescript
+await fpclient.metadata.updateTrace({
+  projectId: "550e8400-e29b-41d4-a716-446655440000",
+  sessionId: "660e8400-e29b-41d4-a716-446655440000",
+  traceId: "770e8400-e29b-41d4-a716-446655440000",
+  metadata: {
+    resolution_category: "billing_credit_applied",
+    ticket_id: "TICKET-12345678",
+    resolved: true,
+    resolution_time_ms: 1234,
+  },
+});
+```
+
+**Merge Semantics**: New keys overwrite existing keys, preserving unmentioned keys.
+
+See the [Freeplay Docs](https://docs.freeplay.ai) for more usage examples and the API reference.
+
+## Documentation
 For comprehensive documentation and examples, visit **[docs.freeplay.ai](https://docs.freeplay.ai)**.
 
 ## Requirements

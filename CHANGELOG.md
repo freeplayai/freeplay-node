@@ -1,6 +1,40 @@
+
 # Changelog
 
 Notable additions, fixes, or breaking changes to the Freeplay SDK.
+
+## [0.5.3] - 2025-12-22
+
+### Added
+
+- New `Metadata` resource for updating session and trace metadata after creation:
+
+  ```typescript
+  // Update session metadata
+  await fpclient.metadata.updateSession({
+    projectId: "550e8400-e29b-41d4-a716-446655440000",
+    sessionId: "660e8400-e29b-41d4-a716-446655440000",
+    metadata: {
+      customer_id: "cust_123",
+      conversation_rating: 5,
+      support_tier: "premium",
+    },
+  });
+
+  // Update trace metadata
+  await fpclient.metadata.updateTrace({
+    projectId: "550e8400-e29b-41d4-a716-446655440000",
+    sessionId: "660e8400-e29b-41d4-a716-446655440000",
+    traceId: "770e8400-e29b-41d4-a716-446655440000",
+    metadata: {
+      resolution_category: "billing_credit_applied",
+      ticket_id: "TICKET-12345678",
+      resolved: true,
+    },
+  });
+  ```
+
+  This enables associating IDs and metadata with sessions/traces after conversation ends, eliminating the need to log dummy completions just to update metadata. New keys overwrite existing keys, preserving unmentioned keys (merge semantics).
 
 ## [0.5.2] - 2025-10-08
 
