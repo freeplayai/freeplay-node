@@ -120,6 +120,89 @@ await fpclient.metadata.updateTrace({
 
 **Merge Semantics**: New keys overwrite existing keys, preserving unmentioned keys.
 
+### Tool Schemas
+
+The SDK supports multiple tool schema formats for different LLM providers:
+
+#### GenAI/Vertex AI Format
+
+GenAI uses a unique structure where a single tool contains multiple function declarations:
+
+```typescript
+import { GenaiFunction, GenaiTool } from "freeplay";
+
+const weatherFunction: GenaiFunction = {
+  name: "get_weather",
+  description: "Get the current weather for a location",
+  parameters: {
+    type: "object",
+    properties: {
+      location: { type: "string", description: "City name" },
+      units: {
+        type: "string",
+        enum: ["celsius", "fahrenheit"],
+      },
+    },
+    required: ["location"],
+  },
+};
+
+// Single tool with multiple functions (GenAI-specific)
+const toolSchema: GenaiTool[] = [
+  {
+    functionDeclarations: [weatherFunction, newsFunction, searchFunction],
+  },
+];
+
+await freeplay.recordings.create({
+  projectId,
+  allMessages: [...],
+  toolSchema,
+  callInfo: { provider: "genai", model: "gemini-2.0-flash" },
+});
+```
+
+#### OpenAI Format
+
+```typescript
+const toolSchema = [
+  {
+    type: "function",
+    function: {
+      name: "get_weather",
+      description: "Get weather information",
+      parameters: {
+        type: "object",
+        properties: {
+          location: { type: "string" },
+        },
+        required: ["location"],
+      },
+    },
+  },
+];
+```
+
+#### Anthropic Format
+
+```typescript
+const toolSchema = [
+  {
+    name: "get_weather",
+    description: "Get weather information",
+    input_schema: {
+      type: "object",
+      properties: {
+        location: { type: "string" },
+      },
+      required: ["location"],
+    },
+  },
+];
+```
+
+**Note**: All formats are backward compatible. The backend automatically normalizes tool schemas regardless of format.
+
 See the [Freeplay Docs](https://docs.freeplay.ai) for more usage examples and the API reference.
 
 ## Documentation
@@ -139,6 +222,8 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 ## Development
 
+### Building and Testing
+
 ```bash
 # Install dependencies
 npm run safe-install
@@ -152,6 +237,39 @@ npm run build
 # Lint and format
 npm run lint:fix
 ```
+
+### Interactive REPL
+
+The SDK includes an interactive REPL for quick testing and development:
+
+```bash
+# 1. Create .env file (copy from .env.example)
+cp .env.example .env
+# Edit .env with your API keys
+
+# 2. Start REPL
+npm run repl
+```
+
+The REPL provides:
+- Pre-initialized `client` (Freeplay instance)
+- Environment variables: `projectId`, `sessionId`, `datasetId`, `apiBase`
+- Type imports: `GenaiFunction`, `GenaiTool`
+- Tab completion and syntax highlighting
+
+Example REPL usage:
+```javascript
+freeplay> await client.recordings.create({
+  projectId,
+  allMessages: [
+    { role: 'user', content: 'Hello!' },
+    { role: 'assistant', content: 'Hi there!' }
+  ],
+  callInfo: { provider: 'openai', model: 'gpt-4' }
+});
+```
+
+See [REPL.md](REPL.md) for detailed documentation.
 
 ## License
 

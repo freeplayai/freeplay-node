@@ -3,6 +3,60 @@
 
 Notable additions, fixes, or breaking changes to the Freeplay SDK.
 
+## [Unreleased]
+
+### Added
+
+- **GenAI Tool Schema Support**: Added `GenaiFunction` and `GenaiTool` TypeScript types for Google GenAI/Vertex AI tool schema format.
+
+  ```typescript
+  import { GenaiFunction, GenaiTool } from "freeplay";
+
+  // Create function declarations
+  const weatherFunction: GenaiFunction = {
+    name: "get_weather",
+    description: "Get the current weather for a location",
+    parameters: {
+      type: "object",
+      properties: {
+        location: { type: "string", description: "City name" },
+        units: {
+          type: "string",
+          enum: ["celsius", "fahrenheit"],
+          description: "Temperature units",
+        },
+      },
+      required: ["location"],
+    },
+  };
+
+  // Create tool schema (single tool with multiple functions)
+  const toolSchema: GenaiTool[] = [
+    {
+      functionDeclarations: [weatherFunction],
+    },
+  ];
+
+  // Use in recordings
+  await freeplay.recordings.create({
+    projectId,
+    allMessages: [...],
+    toolSchema,
+    callInfo: { provider: "genai", model: "gemini-2.0-flash" },
+  });
+  ```
+
+  **Key Features:**
+  - Supports GenAI's unique format: single tool with multiple function declarations
+  - Full TypeScript type safety with JSDoc documentation
+  - Backward compatible: existing tool schema formats continue to work
+  - Comprehensive test coverage (12 new unit tests)
+
+  **Notes:**
+  - GenAI uses a different structure than OpenAI/Anthropic (multiple functions per tool object)
+  - Same format works for both GenAI API and Vertex AI
+  - Backend automatically normalizes all tool schema formats
+
 ## [0.5.3] - 2025-12-22
 
 ### Added
