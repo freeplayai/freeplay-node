@@ -3,7 +3,7 @@
 
 Notable additions, fixes, or breaking changes to the Freeplay SDK.
 
-## [Unreleased]
+## [0.5.3] - 2025-12-29
 
 ### Added
 
@@ -57,7 +57,7 @@ Notable additions, fixes, or breaking changes to the Freeplay SDK.
   - Same format works for both GenAI API and Vertex AI
   - Backend automatically normalizes all tool schema formats
 
-## [0.5.3] - 2025-12-22
+## [0.5.4] - 2025-12-22
 
 ### Added
 
