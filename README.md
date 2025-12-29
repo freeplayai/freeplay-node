@@ -1,31 +1,42 @@
-<h1 align="center">Freeplay Node.js SDK</h1>
+<h1 align="center">Freeplay Node SDK</h1>
 
 <p align="center">
-  <strong>The official Node.js/TypeScript SDK for the <a href="https://freeplay.ai">Freeplay</a> platform</strong>
+  <strong>The official Node/TypeScript SDK for <a href="https://freeplay.ai">Freeplay</a></strong><br/>
+  The ops platform for enterprise AI engineering teams
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/freeplay"><img src="https://img.shields.io/npm/v/freeplay.svg" alt="npm version" /></a>
-  <a href="https://github.com/freeplayai/freeplay-node/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License" /></a>
+  <a href="https://www.npmjs.com/package/freeplay"><img src="https://img.shields.io/npm/v/freeplay.svg" alt="version" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License" /></a>
 </p>
 
 <p align="center">
-  <a href="https://docs.freeplay.ai">Documentation</a> •
-  <a href="#installation">Installation</a> •
-  <a href="#quick-start">Quick Start</a> •
+  <a href="https://docs.freeplay.ai">Docs</a> •
+  <a href="https://docs.freeplay.ai/quick-start/observability-prompt-management">Quick Start</a> •
+  <a href="https://docs.freeplay.ai/freeplay-sdk/setup">SDK Setup</a> •
+  <a href="https://docs.freeplay.ai/resources/api-reference">API Reference</a> •
+  <a href="CHANGELOG.md">Changelog</a> •
   <a href="CONTRIBUTING.md">Contributing</a>
 </p>
 
 ---
 
-Freeplay helps teams build, test, and optimize LLM-powered applications. This SDK enables you to:
+## Overview
 
-- **Manage prompts** — Version and retrieve prompt templates across environments
-- **Record interactions** — Log LLM calls for observability and debugging
-- **Track sessions** — Group related interactions together
-- **Run evaluations** — Execute test runs against your prompts
-- **Capture feedback** — Collect customer feedback on responses
-- **Trace agents** — Monitor multi-step agent workflows
+Freeplay is the only platform your team needs to manage the end-to-end AI application development lifecycle. It provides an integrated workflow for improving your AI agents and other generative AI products. Engineers, data scientists, product managers, designers, and subject matter experts can all review production logs, curate datasets, experiment with changes, create and run evaluations, and deploy updates.
+
+Use this SDK to integrate with Freeplay's core capabilities:
+
+- [**Prompts**](https://docs.freeplay.ai/freeplay-sdk/prompts) — version, format, and fetch prompt templates across environments
+- [**Recording**](https://docs.freeplay.ai/freeplay-sdk/recording-completions) — log LLM calls for observability and debugging
+- [**Sessions**](https://docs.freeplay.ai/freeplay-sdk/sessions) & [**Traces**](https://docs.freeplay.ai/freeplay-sdk/traces) — group interactions and multi-step agent workflows
+- [**Test Runs**](https://docs.freeplay.ai/freeplay-sdk/test-runs) — execute evaluation runs against prompts/datasets
+- [**Feedback**](https://docs.freeplay.ai/freeplay-sdk/customer-feedback) — capture user/customer feedback and events
+
+## Requirements
+
+- Node.js 18 or higher
+- A Freeplay account + API key
 
 ## Installation
 
@@ -36,23 +47,13 @@ npm install freeplay
 ## Quick Start
 
 ```typescript
-import Freeplay, { getCallInfo, getSessionInfo } from "freeplay";
-import OpenAI from "openai";
+import Freeplay from "freeplay";
 
-// Initialize clients
 const freeplay = new Freeplay({
   freeplayApiKey: process.env.FREEPLAY_API_KEY,
-  baseUrl: `https://${process.env.FREEPLAY_CUSTOMER}.freeplay.ai/api`,
 });
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-// Create a session for grouping interactions
-const session = freeplay.sessions.create();
-
-// Get your prompt from Freeplay
+// Fetch a prompt from Freeplay
 const prompt = await freeplay.prompts.getFormatted({
   projectId: process.env.FREEPLAY_PROJECT_ID,
   templateName: "my-prompt",
@@ -60,105 +61,60 @@ const prompt = await freeplay.prompts.getFormatted({
   variables: { user_input: "Hello, world!" },
 });
 
-// Call your LLM provider
-const start = new Date();
+// Call your LLM provider with prompt.llmPrompt
 const response = await openai.chat.completions.create({
   model: prompt.promptInfo.model,
   messages: prompt.llmPrompt,
-  ...prompt.promptInfo.modelParameters,
 });
-const end = new Date();
 
-// Record the interaction
+// Record the result for observability
 await freeplay.recordings.create({
   projectId: process.env.FREEPLAY_PROJECT_ID,
   allMessages: prompt.allMessages({
     role: "assistant",
     content: response.choices[0].message.content,
   }),
-  inputs: { user_input: "Hello, world!" },
-  sessionInfo: getSessionInfo(session),
-  promptVersionInfo: prompt.promptInfo,
-  callInfo: getCallInfo(prompt.promptInfo, start, end),
-  responseInfo: { isComplete: true },
 });
 ```
 
-### Updating Metadata
+See the [SDK Setup guide](https://docs.freeplay.ai/freeplay-sdk/setup) for complete examples.
 
-Update session and trace metadata after creation. This is useful for associating IDs and metadata generated after a conversation ends (e.g., ticket IDs, summary IDs, resolution status).
+## Configuration
 
-#### Update Session Metadata
+### Environment variables
 
-```typescript
-await fpclient.metadata.updateSession({
-  projectId: "550e8400-e29b-41d4-a716-446655440000",
-  sessionId: "660e8400-e29b-41d4-a716-446655440000",
-  metadata: {
-    customer_id: "cust_123",
-    conversation_rating: 5,
-    support_tier: "premium",
-  },
-});
+```bash
+export FREEPLAY_API_KEY="fp_..."
+export FREEPLAY_PROJECT_ID="xy..."
+# Optional: override if using a custom domain / private deployment
+export FREEPLAY_API_BASE="https://app.freeplay.ai/api"
 ```
 
-#### Update Trace Metadata
+**API base URL**  
+Default: `https://app.freeplay.ai/api`
 
-```typescript
-await fpclient.metadata.updateTrace({
-  projectId: "550e8400-e29b-41d4-a716-446655440000",
-  sessionId: "660e8400-e29b-41d4-a716-446655440000",
-  traceId: "770e8400-e29b-41d4-a716-446655440000",
-  metadata: {
-    resolution_category: "billing_credit_applied",
-    ticket_id: "TICKET-12345678",
-    resolved: true,
-    resolution_time_ms: 1234,
-  },
-});
-```
+Custom domain/private deployment: `https://<your-domain>/api`
 
-**Merge Semantics**: New keys overwrite existing keys, preserving unmentioned keys.
+## Versioning
 
-See the [Freeplay Docs](https://docs.freeplay.ai) for more usage examples and the API reference.
+This SDK follows Semantic Versioning (SemVer): **MAJOR.MINOR.PATCH**.
 
-## Documentation
-For comprehensive documentation and examples, visit **[docs.freeplay.ai](https://docs.freeplay.ai)**.
+- **PATCH**: bug fixes
+- **MINOR**: backward-compatible features
+- **MAJOR**: breaking changes
 
-## Requirements
+Before upgrading major versions, review the changelog.
 
-- Node.js 18 or higher
-- A [Freeplay](https://freeplay.ai) account and API key
+## Support
+
+- **Docs**: https://docs.freeplay.ai
+- **Issues**: https://github.com/freeplayai/freeplay-node/issues
+- **Security**: security@freeplay.ai
 
 ## Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-- **Bug reports** — [Open an issue](https://github.com/freeplayai/freeplay-node/issues)
-- **Security issues** — Email [security@freeplay.ai](mailto:security@freeplay.ai)
-
-## Development
-
-```bash
-# Install dependencies
-npm run safe-install
-
-# Run tests
-npm test
-
-# Build
-npm run build
-
-# Lint and format
-npm run lint:fix
-```
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-This SDK is released under the [Apache 2.0 License](LICENSE).
-
----
-
-<p align="center">
-  Built with ❤️ by the <a href="https://freeplay.ai">Freeplay</a> team
-</p>
+Apache-2.0 — see [LICENSE](LICENSE).
