@@ -5,7 +5,7 @@ const projectId = process.env["FREEPLAY_PROJECT_ID"];
 const environment = "latest";
 const templateName = "chat";
 
-const freeplay = new Freeplay({
+const fpClient = new Freeplay({
   freeplayApiKey: process.env["FREEPLAY_API_KEY"],
   baseUrl: `${process.env["FREEPLAY_API_URL"]}/api`,
 });
@@ -16,7 +16,7 @@ const openai = new OpenAI({
 
 async function callLLM(input, history, sessionInfo) {
   // Prepare prompt with current conversation history
-  const promptTemplate = await freeplay.prompts.get({
+  const promptTemplate = await fpClient.prompts.get({
     projectId,
     templateName,
     environment,
@@ -42,7 +42,7 @@ async function callLLM(input, history, sessionInfo) {
   };
 
   // Record the interaction
-  await freeplay.recordings.create({
+  await fpClient.recordings.create({
     projectId,
     allMessages: [...history, responseMessage],
     inputs: { input },
@@ -59,7 +59,7 @@ async function callLLM(input, history, sessionInfo) {
 
 async function main() {
   // Create a new session
-  const session = freeplay.sessions.create({
+  const session = fpClient.sessions.create({
     customMetadata: { conversation_topic: "home repair" },
   });
   const sessionInfo = getSessionInfo(session);

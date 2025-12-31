@@ -11,7 +11,7 @@ Notable additions, fixes, or breaking changes to the Freeplay SDK.
 
   ```typescript
   // Update session metadata
-  await fpclient.metadata.updateSession({
+  await fpClient.metadata.updateSession({
     projectId: "550e8400-e29b-41d4-a716-446655440000",
     sessionId: "660e8400-e29b-41d4-a716-446655440000",
     metadata: {
@@ -22,7 +22,7 @@ Notable additions, fixes, or breaking changes to the Freeplay SDK.
   });
 
   // Update trace metadata
-  await fpclient.metadata.updateTrace({
+  await fpClient.metadata.updateTrace({
     projectId: "550e8400-e29b-41d4-a716-446655440000",
     sessionId: "660e8400-e29b-41d4-a716-446655440000",
     traceId: "770e8400-e29b-41d4-a716-446655440000",

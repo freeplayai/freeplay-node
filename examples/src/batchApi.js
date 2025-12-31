@@ -6,7 +6,7 @@ const openai = new OpenAI({
   apiKey: process.env["OPENAI_API_KEY"],
 });
 
-const freeplayClient = new Freeplay({
+const fpClient = new Freeplay({
   freeplayApiKey: process.env["FREEPLAY_API_KEY"],
   baseUrl: `${process.env["FREEPLAY_API_URL"]}/api`,
 });
@@ -24,7 +24,7 @@ const questions = [
   "Who is the author of 'To Kill a Mockingbird'?",
 ];
 
-const promptTemplate = await freeplayClient.prompts.get({
+const promptTemplate = await fpClient.prompts.get({
   projectId: PROJECT_ID,
   templateName: "basic_trivia_bot",
   environment: ENVIRONMENT,
@@ -38,8 +38,8 @@ for (const question of questions) {
   const formattedPrompt = promptTemplate.bind(inputVars).format();
 
   // Create session and completion in Freeplay
-  const sessionId = await freeplayClient.sessions.create();
-  const completionInfo = await freeplayClient.recordings.create({
+  const sessionId = await fpClient.sessions.create();
+  const completionInfo = await fpClient.recordings.create({
     projectId: PROJECT_ID,
     allMessages: formattedPrompt.messages,
     inputs: inputVars,
@@ -100,7 +100,7 @@ for (const line of lines) {
   console.log(completionId, output);
 
   // Update in Freeplay
-  await freeplayClient.recordings.update({
+  await fpClient.recordings.update({
     projectId: PROJECT_ID,
     completionId: completionId,
     newMessages: [

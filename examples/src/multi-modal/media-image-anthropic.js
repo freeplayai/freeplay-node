@@ -9,7 +9,7 @@ const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const freeplay = new Freeplay({
+const fpClient = new Freeplay({
   freeplayApiKey: process.env["FREEPLAY_API_KEY"],
   baseUrl: process.env["FREEPLAY_API_URL"] + "/api",
 });
@@ -18,7 +18,7 @@ const inputVariables = {
   question: "Describe what's in this image",
 };
 
-const promptTemplate = await freeplay.prompts.get({
+const promptTemplate = await fpClient.prompts.get({
   projectId,
   templateName,
   environment,
@@ -53,7 +53,7 @@ const result = await client.messages.create({
 const returnContent = result.content;
 let end = new Date();
 
-await freeplay.recordings.create({
+await fpClient.recordings.create({
   projectId,
   allMessages: [
     ...formattedPrompt.llmPrompt,
@@ -64,7 +64,7 @@ await freeplay.recordings.create({
   ],
   inputs: inputVariables,
   mediaInputs,
-  sessionInfo: getSessionInfo(freeplay.sessions.create()),
+  sessionInfo: getSessionInfo(fpClient.sessions.create()),
   promptVersionInfo: formattedPrompt.promptInfo,
   callInfo: getCallInfo(formattedPrompt.promptInfo, start, end),
   responseInfo: { isComplete: true },

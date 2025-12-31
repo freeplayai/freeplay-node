@@ -8,7 +8,7 @@ const templateName = "media";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const freeplay = new Freeplay({
+const fpClient = new Freeplay({
   freeplayApiKey: process.env["FREEPLAY_API_KEY"],
   baseUrl: process.env["FREEPLAY_API_URL"] + "/api",
 });
@@ -17,7 +17,7 @@ let inputVariables = {
   question: "Could you explain why this image is funny?",
 };
 
-let formattedPrompt = await freeplay.prompts.getFormatted({
+let formattedPrompt = await fpClient.prompts.getFormatted({
   projectId,
   templateName,
   environment,
@@ -56,7 +56,7 @@ const result = await generativeModel.generateContent(prompt);
 const returnContent = result.response.candidates[0].content.parts[0].text;
 let end = new Date();
 
-await freeplay.recordings.create({
+await fpClient.recordings.create({
   projectId,
   allMessages: [
     {
@@ -69,7 +69,7 @@ await freeplay.recordings.create({
     },
   ],
   inputs: inputVariables,
-  sessionInfo: getSessionInfo(freeplay.sessions.create()),
+  sessionInfo: getSessionInfo(fpClient.sessions.create()),
   promptVersionInfo: formattedPrompt.promptInfo,
   callInfo: getCallInfo(formattedPrompt.promptInfo, start, end),
   responseInfo: { isComplete: true },

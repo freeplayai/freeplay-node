@@ -2,7 +2,7 @@ import Freeplay, { CallInfo, ResponseInfo, SessionInfo } from "freeplay";
 import Anthropic from "@anthropic-ai/sdk";
 import { MessageParam } from "@anthropic-ai/sdk/resources/messages";
 
-const fpclient = new Freeplay({
+const fpClient = new Freeplay({
   freeplayApiKey: process.env["FREEPLAY_API_KEY"]!,
   baseUrl: `${process.env["FREEPLAY_API_URL"]}/api`,
 });
@@ -20,7 +20,7 @@ async function callAndRecord(
   sessionInfo: SessionInfo,
   parentId?: string,
 ): Promise<{ completionId: string; llmResponse: string }> {
-  const formattedPrompt = await fpclient.prompts.getFormatted({
+  const formattedPrompt = await fpClient.prompts.getFormatted({
     projectId,
     templateName,
     environment: env,
@@ -61,7 +61,7 @@ async function callAndRecord(
     isComplete: completion.stop_reason === "stop_sequence",
   };
 
-  const recordResponse = await fpclient.recordings.create({
+  const recordResponse = await fpClient.recordings.create({
     projectId: projectId,
     allMessages: allMessages,
     sessionInfo: sessionInfo,
@@ -86,7 +86,7 @@ const userQuestions = [
 ];
 
 async function main() {
-  const session = fpclient.sessions.create({
+  const session = fpClient.sessions.create({
     customMetadata: { metadata_123: "blah" },
   });
   let lastTraceId: string | undefined = undefined;
@@ -120,7 +120,7 @@ async function main() {
     console.log(
       `Sending customer feedback for completion id: ${botResponse.completionId}`,
     );
-    await fpclient.customerFeedback.update({
+    await fpClient.customerFeedback.update({
       projectId: projectId,
       completionId: botResponse.completionId,
       customerFeedback: {
@@ -139,7 +139,7 @@ async function main() {
       is_it_good: Math.random() > 0.5,
       freeplay_feedback: Math.random() > 0.5 ? "positive" : "negative",
     };
-    await fpclient.customerFeedback.updateTrace({
+    await fpClient.customerFeedback.updateTrace({
       projectId: projectId,
       traceId: traceInfo.traceId,
       customerFeedback: traceFeedback,

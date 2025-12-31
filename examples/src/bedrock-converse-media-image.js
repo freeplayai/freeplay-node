@@ -45,7 +45,7 @@ async function loadImageFromUrl(imageUrl) {
 }
 
 // Initialize clients
-const freeplay = new Freeplay({
+const fpClient = new Freeplay({
   freeplayApiKey: process.env.FREEPLAY_API_KEY,
   baseUrl: `${process.env.FREEPLAY_API_URL}/api`,
 });
@@ -88,7 +88,7 @@ const mediaInputs = {
 };
 
 // Get formatted prompt from Freeplay
-const promptTemplate = await freeplay.prompts.get({
+const promptTemplate = await fpClient.prompts.get({
   projectId,
   templateName: "nova_image_test",
   environment: "latest",
@@ -128,7 +128,7 @@ const bedrockMessages = [
 const start = new Date();
 
 // Create session
-const session = freeplay.sessions.create();
+const session = fpClient.sessions.create();
 
 // Call Bedrock API
 const command = new ConverseCommand({
@@ -158,7 +158,7 @@ const recordMessages = [
   outputMessage,
 ];
 
-await freeplay.recordings.create({
+await fpClient.recordings.create({
   projectId,
   allMessages: recordMessages,
   sessionInfo: getSessionInfo(session),

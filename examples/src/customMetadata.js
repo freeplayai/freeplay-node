@@ -5,7 +5,7 @@ const projectId = process.env["FREEPLAY_PROJECT_ID"];
 const environment = "latest";
 const templateName = "chat";
 
-const freeplay = new Freeplay({
+const fpClient = new Freeplay({
   freeplayApiKey: process.env["FREEPLAY_API_KEY"],
   baseUrl: `${process.env["FREEPLAY_API_URL"]}/api`,
 });
@@ -16,7 +16,7 @@ const anthropic = new Anthropic({
 
 async function main() {
   // Initialize a session with custom metadata
-  const session = freeplay.sessions.create({
+  const session = fpClient.sessions.create({
     customMetadata: {
       user_id: "user_12345",
       subscription_tier: "premium",
@@ -41,7 +41,7 @@ async function main() {
   ];
 
   // Format the prompt for Anthropic
-  const formattedPrompt = await freeplay.prompts.getFormatted({
+  const formattedPrompt = await fpClient.prompts.getFormatted({
     projectId,
     templateName,
     environment,
@@ -72,7 +72,7 @@ async function main() {
   console.log(assistantMessage.content[0].text);
 
   // Record the interaction with all the custom metadata
-  const recordingResponse = await freeplay.recordings.create({
+  const recordingResponse = await fpClient.recordings.create({
     projectId,
     allMessages: [...history, assistantMessage],
     inputs: {},
@@ -90,7 +90,7 @@ async function main() {
   );
 
   // Now add customer feedback to the recorded completion
-  await freeplay.customerFeedback.update({
+  await fpClient.customerFeedback.update({
     completionId: recordingResponse.completionId,
     customerFeedback: {
       helpful: true,

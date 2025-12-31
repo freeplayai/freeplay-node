@@ -18,7 +18,7 @@ const projectId: string = process.env["FREEPLAY_PROJECT_ID"]!;
 const environment: string = "latest";
 const templateName: string = "research-agent";
 
-const freeplay = new Freeplay({
+const fpClient = new Freeplay({
   freeplayApiKey: process.env["FREEPLAY_API_KEY"]!,
   baseUrl: `${process.env["FREEPLAY_API_URL"]}/api`,
 });
@@ -155,7 +155,7 @@ const handleTurn = async (
 
     const assistantMessage = response.choices[0].message;
 
-    await freeplay.recordings.create({
+    await fpClient.recordings.create({
       projectId,
       parentId: trace.traceId,
       allMessages: [
@@ -229,10 +229,10 @@ async function main(): Promise<void> {
   console.log("🤖 Research Agent - Ask me anything and I'll search the web!");
   console.log("Type 'exit' or 'quit' to end the conversation.\n");
 
-  const session = freeplay.sessions.create();
+  const session = fpClient.sessions.create();
 
   // Get the prompt template from Freeplay
-  const promptTemplate = await freeplay.prompts.get({
+  const promptTemplate = await fpClient.prompts.get({
     projectId,
     templateName,
     environment,

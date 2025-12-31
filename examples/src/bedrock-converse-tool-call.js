@@ -115,7 +115,7 @@ const toolsSpec = [
 ];
 
 // Initialize clients
-const freeplay = new Freeplay({
+const fpClient = new Freeplay({
   freeplayApiKey: process.env.FREEPLAY_API_KEY,
   baseUrl: `${process.env.FREEPLAY_API_URL}/api`,
 });
@@ -133,7 +133,7 @@ const equation = "2x + 5 = 10";
 const promptVars = { equation };
 
 // Get formatted prompt
-const promptTemplate = await freeplay.prompts.get({
+const promptTemplate = await fpClient.prompts.get({
   projectId,
   templateName: "nova_tool_call",
   environment: "latest",
@@ -156,7 +156,7 @@ console.log(`Using model: ${formattedPrompt.promptInfo.model}`);
 console.log(`Template: ${formattedPrompt.promptInfo.templateName}`);
 
 // Create session and trace
-const session = freeplay.sessions.create();
+const session = fpClient.sessions.create();
 const trace = session.createTrace(equation);
 
 // Initialize history with formatted prompt messages
@@ -236,7 +236,7 @@ while (finishReason !== "end_turn" && finishReason !== "stop") {
     console.log("\n=== Recording to Freeplay ===");
     console.log(`History length: ${history.length}`);
 
-    await freeplay.recordings.create({
+    await fpClient.recordings.create({
       projectId,
       allMessages: history,
       inputs: promptVars,
@@ -263,7 +263,7 @@ while (finishReason !== "end_turn" && finishReason !== "stop") {
     console.log("\n=== Recording final response to Freeplay ===");
     console.log(`History length: ${history.length}`);
 
-    await freeplay.recordings.create({
+    await fpClient.recordings.create({
       projectId,
       allMessages: history,
       inputs: promptVars,
