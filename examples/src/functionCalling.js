@@ -5,7 +5,7 @@ const projectId = process.env["FREEPLAY_PROJECT_ID"];
 const environment = "latest";
 const templateName = "chat";
 
-const freeplay = new Freeplay({
+const fpClient = new Freeplay({
   freeplayApiKey: process.env["FREEPLAY_API_KEY"],
   baseUrl: `${process.env["FREEPLAY_API_URL"]}/api`,
 });
@@ -121,7 +121,7 @@ function handleToolCall(toolCall) {
 }
 
 async function main() {
-  const session = freeplay.sessions.create();
+  const session = fpClient.sessions.create();
   const sessionInfo = getSessionInfo(session);
 
   // Start with the user question
@@ -137,7 +137,7 @@ async function main() {
   ];
 
   // Format the prompt
-  const promptTemplate = await freeplay.prompts.get({
+  const promptTemplate = await fpClient.prompts.get({
     projectId,
     templateName,
     environment,
@@ -164,7 +164,7 @@ async function main() {
   );
 
   // Record the interaction
-  await freeplay.recordings.create({
+  await fpClient.recordings.create({
     projectId,
     allMessages: [...history, assistantMessage],
     inputs: {},
@@ -216,7 +216,7 @@ async function main() {
     console.log(`\nAssistant: ${finalMessage.content}`);
 
     // Record the follow-up interaction
-    await freeplay.recordings.create({
+    await fpClient.recordings.create({
       projectId,
       allMessages: [...updatedHistory, finalMessage],
       inputs: {},

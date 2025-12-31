@@ -5,7 +5,7 @@ const projectId = process.env["FREEPLAY_PROJECT_ID"];
 const environment = "latest";
 const templateName = "simple-chat";
 
-const freeplay = new Freeplay({
+const fpClient = new Freeplay({
   freeplayApiKey: process.env["FREEPLAY_API_KEY"],
   baseUrl: `${process.env["FREEPLAY_API_URL"]}/api`,
 });
@@ -15,7 +15,7 @@ const openai = new OpenAI({
 });
 
 async function main() {
-  const session = freeplay.sessions.create();
+  const session = fpClient.sessions.create();
   const sessionInfo = getSessionInfo(session);
 
   const userQuestion =
@@ -28,7 +28,7 @@ async function main() {
   ];
 
   // Get prompt
-  const promptTemplate = await freeplay.prompts.get({
+  const promptTemplate = await fpClient.prompts.get({
     projectId,
     templateName,
     environment,
@@ -67,7 +67,7 @@ async function main() {
   };
 
   // Record the completed interaction
-  await freeplay.recordings.create({
+  await fpClient.recordings.create({
     projectId,
     allMessages: [...history, responseMessage],
     inputs: {},
