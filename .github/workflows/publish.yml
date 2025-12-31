@@ -24,6 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write # Needed for creating releases
+      id-token: write # Needed for npm OIDC authentication
 
     steps:
       - name: Checkout code
@@ -34,7 +35,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
+          node-version: "24"
           cache: "npm"
           registry-url: "https://registry.npmjs.org"
 
@@ -96,8 +97,6 @@ jobs:
           else
             npm publish --ignore-scripts
           fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
         if: github.event.inputs.dry_run == 'false'
