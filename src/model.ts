@@ -529,3 +529,75 @@ export type OpenAIToolCall = {
 // provider specific Record<string, any> and Normalized format
 export type NormalizedOutputSchema = Record<string, any>; // Processed JSON schema for storage
 export type FormattedOutputSchema = Record<string, any>; // Processed JSON schema for storage
+
+// Tool schema types for Google GenAI/Vertex AI
+
+/**
+ * Function declaration for Google GenAI API tool schema format.
+ *
+ * Represents a single function that can be called by the model.
+ * This is the building block for GenaiTool.
+ *
+ * @example
+ * ```typescript
+ * const weatherFunction: GenaiFunction = {
+ *   name: "get_weather",
+ *   description: "Get the current weather for a location",
+ *   parameters: {
+ *     type: "object",
+ *     properties: {
+ *       location: {
+ *         type: "string",
+ *         description: "City name, e.g., 'San Francisco'"
+ *       },
+ *       units: {
+ *         type: "string",
+ *         enum: ["celsius", "fahrenheit"],
+ *         description: "Temperature units"
+ *       }
+ *     },
+ *     required: ["location"]
+ *   }
+ * };
+ * ```
+ */
+export type GenaiFunction = {
+  name: string;
+  description: string;
+  parameters: Record<string, any>; // JSON Schema
+};
+
+/**
+ * Tool schema format for Google GenAI API.
+ *
+ * GenAI uses a different structure than OpenAI/Anthropic:
+ * - A single Tool contains multiple FunctionDeclarations
+ * - Same format is used by both GenAI API and Vertex AI
+ *
+ * This is the key difference: OpenAI/Anthropic pass tools as an array,
+ * while GenAI wraps multiple functions in a single tool object.
+ *
+ * @example
+ * ```typescript
+ * // Single function
+ * const toolSchema: GenaiTool[] = [
+ *   {
+ *     functionDeclarations: [weatherFunction]
+ *   }
+ * ];
+ *
+ * // Multiple functions in one tool (GenAI-specific feature)
+ * const toolSchema: GenaiTool[] = [
+ *   {
+ *     functionDeclarations: [
+ *       weatherFunction,
+ *       newsFunction,
+ *       searchFunction
+ *     ]
+ *   }
+ * ];
+ * ```
+ */
+export type GenaiTool = {
+  functionDeclarations: GenaiFunction[];
+};
