@@ -101,6 +101,106 @@ Default: `https://app.freeplay.ai/api`
 
 Custom domain/private deployment: `https://<your-domain>/api`
 
+**Merge Semantics**: New keys overwrite existing keys, preserving unmentioned keys.
+
+### Tool Schemas
+
+The SDK supports multiple tool schema formats for different LLM providers. Tool schemas are passed as plain objects in the provider's native format.
+
+#### GenAI/Vertex AI Format
+
+GenAI uses a unique structure where a single tool contains multiple function declarations:
+
+```typescript
+// Tool schema as a plain object (GenAI/Vertex format)
+const toolSchema = [
+  {
+    functionDeclarations: [
+      {
+        name: "get_weather",
+        description: "Get the current weather for a location",
+        parameters: {
+          type: "object",
+          properties: {
+            location: { type: "string", description: "City name" },
+            units: {
+              type: "string",
+              enum: ["celsius", "fahrenheit"],
+            },
+          },
+          required: ["location"],
+        },
+      },
+      // Multiple functions can be in a single tool (GenAI-specific)
+      {
+        name: "get_news",
+        description: "Get latest news",
+        parameters: {
+          type: "object",
+          properties: {
+            topic: { type: "string" },
+          },
+          required: ["topic"],
+        },
+      },
+    ],
+  },
+];
+
+await freeplay.recordings.create({
+  projectId,
+  allMessages: [...],
+  toolSchema,
+  callInfo: { provider: "vertex", model: "gemini-2.0-flash" },
+});
+```
+
+#### OpenAI Format
+
+```typescript
+const toolSchema = [
+  {
+    type: "function",
+    function: {
+      name: "get_weather",
+      description: "Get weather information",
+      parameters: {
+        type: "object",
+        properties: {
+          location: { type: "string" },
+        },
+        required: ["location"],
+      },
+    },
+  },
+];
+```
+
+#### Anthropic Format
+
+```typescript
+const toolSchema = [
+  {
+    name: "get_weather",
+    description: "Get weather information",
+    input_schema: {
+      type: "object",
+      properties: {
+        location: { type: "string" },
+      },
+      required: ["location"],
+    },
+  },
+];
+```
+
+**Note**: All formats are backward compatible. The backend automatically normalizes tool schemas regardless of format. Tool schemas should be passed as-is from the provider SDK (e.g., `@google/generative-ai`, `openai`, `@anthropic-ai/sdk`), similar to how messages are handled.
+
+See the [Freeplay Docs](https://docs.freeplay.ai) for more usage examples and the API reference.
+
+## Documentation
+For comprehensive documentation and examples, visit **[docs.freeplay.ai](https://docs.freeplay.ai)**.
+
 ## Versioning
 
 This SDK follows Semantic Versioning (SemVer): **MAJOR.MINOR.PATCH**.
@@ -111,6 +211,13 @@ This SDK follows Semantic Versioning (SemVer): **MAJOR.MINOR.PATCH**.
 
 Before upgrading major versions, review the changelog.
 
+### Building and Testing
+
+```bash
+# Install dependencies
+npm run safe-install
+```
+
 ## Support
 
 - **Docs**: https://docs.freeplay.ai
@@ -120,6 +227,42 @@ Before upgrading major versions, review the changelog.
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+### Interactive REPL
+
+The SDK includes an interactive REPL for quick testing and development:
+
+```bash
+# 1. Create .env file (copy from .env.example)
+cp .env.example .env
+# Edit .env with your API keys
+
+# 2. Start REPL
+# Production mode (default) - connects to app.freeplay.ai
+npm run repl
+
+# Local development mode - connects to localhost:8000 with SSL bypass
+npm run repl -- --local
+```
+
+The REPL provides:
+- Pre-initialized `client` (Freeplay instance)
+- Environment variables: `projectId`, `sessionId`, `datasetId`, `apiBase`
+- Tab completion and syntax highlighting
+
+Example REPL usage:
+```javascript
+freeplay> await client.recordings.create({
+  projectId,
+  allMessages: [
+    { role: 'user', content: 'Hello!' },
+    { role: 'assistant', content: 'Hi there!' }
+  ],
+  callInfo: { provider: 'openai', model: 'gpt-4' }
+});
+```
+
+See [REPL.md](REPL.md) for detailed documentation.
 
 ## License
 

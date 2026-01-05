@@ -59,6 +59,7 @@
     "@anthropic-ai/sdk": "^0.39.0",
     "@aws-sdk/client-bedrock-runtime": "^3.901.0",
     "axios": "^1.8.2",
+    "dotenv": "16.6.1",
     "encoding": "^0.1.13",
     "mustache": "^4.1.0",
     "openai": "^4.83.0",
@@ -77,6 +78,7 @@
     "test-verbose": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:integration": "RUN_INTEGRATION_TESTS=true node --no-warnings node_modules/jest/bin/jest.js --runInBand",
     "test:bedrock": "RUN_INTEGRATION_TESTS=true node --no-warnings node_modules/jest/bin/jest.js --runInBand bedrockConverse",
+    "repl": "npx tsx scripts/repl-setup.ts",
     "prepublishOnly": "source .env.publish && npm run test && npm run build"
   },
   "lavamoat": {

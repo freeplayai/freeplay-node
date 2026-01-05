@@ -3,7 +3,61 @@
 
 Notable additions, fixes, or breaking changes to the Freeplay SDK.
 
-## [0.5.3] - 2025-12-22
+## [0.5.3] - 2025-12-29
+
+### Added
+
+- Interactive REPL for development and testing:
+  - `npm run repl` - Production mode (connects to app.freeplay.ai with SSL verification enabled)
+  - `npm run repl -- --local` - Local development mode (connects to localhost:8000 with SSL verification disabled)
+  - Pre-initialized `client` (Freeplay instance)
+  - Environment variables automatically loaded from `.env` file
+
+### Changed
+
+- **Tool Schema Handling**: The SDK no longer provides `GenaiFunction` and `GenaiTool` TypeScript types. Tool schemas should be passed directly as objects in the provider's native format (e.g., from `@google/generative-ai` or Google Cloud Vertex AI SDKs). This aligns with how messages are handled - users pass provider-native types directly to Freeplay.
+
+  ```typescript
+  // Tool schemas are now passed as raw objects
+  // matching the provider's format
+  const toolSchema = [
+    {
+      functionDeclarations: [
+        {
+          name: "get_weather",
+          description: "Get the current weather for a location",
+          parameters: {
+            type: "object",
+            properties: {
+              location: { type: "string", description: "City name" },
+              units: {
+                type: "string",
+                enum: ["celsius", "fahrenheit"],
+                description: "Temperature units",
+              },
+            },
+            required: ["location"],
+          },
+        },
+      ],
+    },
+  ];
+
+  // Use in recordings
+  await freeplay.recordings.create({
+    projectId,
+    allMessages: [...],
+    toolSchema,
+    callInfo: { provider: "vertex", model: "gemini-2.0-flash" },
+  });
+  ```
+
+  **Notes:**
+  - Backend automatically normalizes all tool schema formats (OpenAI, Anthropic, GenAI/Vertex)
+  - No breaking changes to the API - tool schemas are still passed the same way
+  - This approach is consistent with how we handle messages from different providers
+
+## [0.5.4] - 2025-12-22
 
 ### Added
 
