@@ -105,35 +105,45 @@ Custom domain/private deployment: `https://<your-domain>/api`
 
 ### Tool Schemas
 
-The SDK supports multiple tool schema formats for different LLM providers:
+The SDK supports multiple tool schema formats for different LLM providers. Tool schemas are passed as plain objects in the provider's native format.
 
 #### GenAI/Vertex AI Format
 
 GenAI uses a unique structure where a single tool contains multiple function declarations:
 
 ```typescript
-import { GenaiFunction, GenaiTool } from "freeplay";
-
-const weatherFunction: GenaiFunction = {
-  name: "get_weather",
-  description: "Get the current weather for a location",
-  parameters: {
-    type: "object",
-    properties: {
-      location: { type: "string", description: "City name" },
-      units: {
-        type: "string",
-        enum: ["celsius", "fahrenheit"],
-      },
-    },
-    required: ["location"],
-  },
-};
-
-// Single tool with multiple functions (GenAI-specific)
-const toolSchema: GenaiTool[] = [
+// Tool schema as a plain object (GenAI/Vertex format)
+const toolSchema = [
   {
-    functionDeclarations: [weatherFunction, newsFunction, searchFunction],
+    functionDeclarations: [
+      {
+        name: "get_weather",
+        description: "Get the current weather for a location",
+        parameters: {
+          type: "object",
+          properties: {
+            location: { type: "string", description: "City name" },
+            units: {
+              type: "string",
+              enum: ["celsius", "fahrenheit"],
+            },
+          },
+          required: ["location"],
+        },
+      },
+      // Multiple functions can be in a single tool (GenAI-specific)
+      {
+        name: "get_news",
+        description: "Get latest news",
+        parameters: {
+          type: "object",
+          properties: {
+            topic: { type: "string" },
+          },
+          required: ["topic"],
+        },
+      },
+    ],
   },
 ];
 
@@ -184,7 +194,7 @@ const toolSchema = [
 ];
 ```
 
-**Note**: All formats are backward compatible. The backend automatically normalizes tool schemas regardless of format.
+**Note**: All formats are backward compatible. The backend automatically normalizes tool schemas regardless of format. Tool schemas should be passed as-is from the provider SDK (e.g., `@google/generative-ai`, `openai`, `@anthropic-ai/sdk`), similar to how messages are handled.
 
 See the [Freeplay Docs](https://docs.freeplay.ai) for more usage examples and the API reference.
 
@@ -234,7 +244,6 @@ npm run repl
 The REPL provides:
 - Pre-initialized `client` (Freeplay instance)
 - Environment variables: `projectId`, `sessionId`, `datasetId`, `apiBase`
-- Type imports: `GenaiFunction`, `GenaiTool`
 - Tab completion and syntax highlighting
 
 Example REPL usage:

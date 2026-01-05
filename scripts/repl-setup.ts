@@ -52,7 +52,6 @@ console.log(`  • apiBase      : ${apiBase || '(not set)'}`);
 console.log("\n⚠️  SSL verification disabled for local development");
 console.log("\nAvailable imports:");
 console.log("  • Freeplay     : Main SDK class");
-console.log("  • GenaiFunction, GenaiTool : GenAI tool schema types");
 console.log("\nExample commands:");
 console.log("  await client.metadata.updateSession({");
 console.log("    projectId,");
@@ -75,10 +74,4 @@ replServer.context.sessionId = sessionId;
 replServer.context.datasetId = datasetId;
 replServer.context.apiBase = apiBase;
 replServer.context.Freeplay = Freeplay;
-
-// Import types for convenience
-import('../src/model.js').then((model) => {
-  replServer.context.GenaiFunction = model.GenaiFunction;
-  replServer.context.GenaiTool = model.GenaiTool;
-});
 
