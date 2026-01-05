@@ -238,7 +238,11 @@ cp .env.example .env
 # Edit .env with your API keys
 
 # 2. Start REPL
+# Production mode (default) - connects to app.freeplay.ai
 npm run repl
+
+# Local development mode - connects to localhost:8000 with SSL bypass
+npm run repl -- --local
 ```
 
 The REPL provides:

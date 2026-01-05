@@ -1,10 +1,12 @@
 /**
  * Interactive REPL setup script for Freeplay development.
  * 
- * This script initializes the Freeplay client with environment variables
- * and provides an interactive Node.js REPL for testing and development.
+ * By default, connects to production (app.freeplay.ai).
+ * Use --local flag to connect to localhost with SSL bypass.
  * 
- * Usage: npm run repl
+ * Usage:
+ *   npm run repl          # Production (default)
+ *   npm run repl -- --local   # Local development
  */
 
 import { inspect } from 'util';
@@ -15,16 +17,26 @@ import Freeplay from '../src/index.js';
 // Load environment variables from .env file
 config();
 
-// Disable SSL verification for local development (self-signed certificates)
-// This is safe for local dev but should never be used in production
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+// Check if running in local mode
+const isLocal = process.argv.includes('--local');
+
+if (isLocal) {
+  console.log("🔧 Local mode: Disabling SSL verification for localhost...");
+  // Disable SSL verification for local development (self-signed certificates)
+  // This is safe for local dev but should never be used in production
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
 
 // Get environment variables
 const freeplayApiKey = process.env.FREEPLAY_API_KEY;
-const apiBase = process.env.FREEPLAY_API_URL;
 const projectId = process.env.FREEPLAY_PROJECT_ID;
 const sessionId = process.env.FREEPLAY_SESSION_ID;
 const datasetId = process.env.FREEPLAY_DATASET_ID;
+
+// Set API base URL
+const apiBase = isLocal
+  ? (process.env.FREEPLAY_API_URL || 'http://localhost:8000')
+  : (process.env.FREEPLAY_API_URL || 'https://app.freeplay.ai');
 
 // Initialize client
 let client: Freeplay | null = null;
@@ -34,7 +46,7 @@ if (!freeplayApiKey) {
 } else {
   client = new Freeplay({
     freeplayApiKey,
-    baseUrl: apiBase ? `${apiBase}/api` : 'http://localhost:8000/api',
+    baseUrl: `${apiBase}/api`,
   });
   console.log("✅ Freeplay client initialized as 'client'");
 }
@@ -43,13 +55,21 @@ if (!freeplayApiKey) {
 console.log("\n" + "=".repeat(60));
 console.log("🎮 Freeplay Interactive REPL (Node.js)");
 console.log("=".repeat(60));
+console.log("\nMode:", isLocal ? "🔧 Local Development" : "🌐 Production");
 console.log("\nAvailable variables:");
 console.log("  • client       : Freeplay client instance");
 console.log(`  • projectId    : ${projectId || '(not set)'}`);
 console.log(`  • sessionId    : ${sessionId || '(not set)'}`);
 console.log(`  • datasetId    : ${datasetId || '(not set)'}`);
-console.log(`  • apiBase      : ${apiBase || '(not set)'}`);
-console.log("\n⚠️  SSL verification disabled for local development");
+console.log(`  • apiBase      : ${apiBase}`);
+
+if (isLocal) {
+  console.log("\n⚠️  SSL verification disabled for local development");
+} else {
+  console.log("\n🔒 SSL verification enabled (production mode)");
+  console.log("    Use -- --local flag to connect to localhost");
+}
+
 console.log("\nAvailable imports:");
 console.log("  • Freeplay     : Main SDK class");
 console.log("\nExample commands:");
