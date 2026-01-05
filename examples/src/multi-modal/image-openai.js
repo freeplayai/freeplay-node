@@ -9,7 +9,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const freeplay = new Freeplay({
+const fpClient = new Freeplay({
   freeplayApiKey: process.env["FREEPLAY_API_KEY"],
   baseUrl: process.env["FREEPLAY_API_URL"] + "/api",
 });
@@ -18,7 +18,7 @@ let inputVariables = {
   question: "Could you explain why this image is funny?",
 };
 
-let formattedPrompt = await freeplay.prompts.getFormatted({
+let formattedPrompt = await fpClient.prompts.getFormatted({
   projectId,
   templateName,
   environment,
@@ -58,7 +58,7 @@ const result = await openai.chat.completions.create({
 const returnContent = result.choices[0].message.content;
 let end = new Date();
 
-await freeplay.recordings.create({
+await fpClient.recordings.create({
   projectId,
   allMessages: [
     ...messages,
@@ -68,7 +68,7 @@ await freeplay.recordings.create({
     },
   ],
   inputs: inputVariables,
-  sessionInfo: getSessionInfo(freeplay.sessions.create()),
+  sessionInfo: getSessionInfo(fpClient.sessions.create()),
   promptVersionInfo: formattedPrompt.promptInfo,
   callInfo: getCallInfo(formattedPrompt.promptInfo, start, end),
   responseInfo: { isComplete: true },

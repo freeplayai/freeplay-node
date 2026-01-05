@@ -12,9 +12,9 @@
 
 <p align="center">
   <a href="https://docs.freeplay.ai">Docs</a> •
-  <a href="https://docs.freeplay.ai/quick-start/observability-prompt-management">Quick Start</a> •
+  <a href="https://docs.freeplay.ai/getting-started/overview">Quick Start</a> •
   <a href="https://docs.freeplay.ai/freeplay-sdk/setup">SDK Setup</a> •
-  <a href="https://docs.freeplay.ai/resources/api-reference">API Reference</a> •
+  <a href="https://docs.freeplay.ai/developer-resources/api-reference">API Reference</a> •
   <a href="CHANGELOG.md">Changelog</a> •
   <a href="CONTRIBUTING.md">Contributing</a>
 </p>
@@ -27,11 +27,13 @@ Freeplay is the only platform your team needs to manage the end-to-end AI applic
 
 Use this SDK to integrate with Freeplay's core capabilities:
 
+- **Observability**
+  - [**Sessions**](https://docs.freeplay.ai/freeplay-sdk/sessions) — group related interactions together, e.g. for multi-turn chat or complex agent interactions
+  - [**Traces**](https://docs.freeplay.ai/freeplay-sdk/traces) — track multi-step agent workflows within sessions
+  - [**Completions**](https://docs.freeplay.ai/freeplay-sdk/recording-completions) — record LLM interactions for observability and debugging
+  - [**Customer Feedback**](https://docs.freeplay.ai/freeplay-sdk/customer-feedback) — append user feedback and events to traces and completions
 - [**Prompts**](https://docs.freeplay.ai/freeplay-sdk/prompts) — version, format, and fetch prompt templates across environments
-- [**Recording**](https://docs.freeplay.ai/freeplay-sdk/recording-completions) — log LLM calls for observability and debugging
-- [**Sessions**](https://docs.freeplay.ai/freeplay-sdk/sessions) & [**Traces**](https://docs.freeplay.ai/freeplay-sdk/traces) — group interactions and multi-step agent workflows
-- [**Test Runs**](https://docs.freeplay.ai/freeplay-sdk/test-runs) — execute evaluation runs against prompts/datasets
-- [**Feedback**](https://docs.freeplay.ai/freeplay-sdk/customer-feedback) — capture user/customer feedback and events
+- [**Test Runs**](https://docs.freeplay.ai/freeplay-sdk/test-runs) — execute evaluation runs against prompts and datasets
 
 ## Requirements
 
@@ -48,29 +50,33 @@ npm install freeplay
 
 ```typescript
 import Freeplay from "freeplay";
+import OpenAI from "openai";
 
-const freeplay = new Freeplay({
+const fpClient = new Freeplay({
   freeplayApiKey: process.env.FREEPLAY_API_KEY,
 });
+const openai = new OpenAI();
+
+const projectId = process.env.FREEPLAY_PROJECT_ID;
 
 // Fetch a prompt from Freeplay
-const prompt = await freeplay.prompts.getFormatted({
-  projectId: process.env.FREEPLAY_PROJECT_ID,
+const formattedPrompt = await fpClient.prompts.getFormatted({
+  projectId,
   templateName: "my-prompt",
   environment: "prod",
   variables: { user_input: "Hello, world!" },
 });
 
-// Call your LLM provider with prompt.llmPrompt
+// Call your LLM provider with formattedPrompt.llmPrompt
 const response = await openai.chat.completions.create({
-  model: prompt.promptInfo.model,
-  messages: prompt.llmPrompt,
+  model: formattedPrompt.promptInfo.model,
+  messages: formattedPrompt.llmPrompt,
 });
 
-// Record the result for observability
-await freeplay.recordings.create({
-  projectId: process.env.FREEPLAY_PROJECT_ID,
-  allMessages: prompt.allMessages({
+// Record the interaction for observability
+await fpClient.recordings.create({
+  projectId,
+  allMessages: formattedPrompt.allMessages({
     role: "assistant",
     content: response.choices[0].message.content,
   }),
