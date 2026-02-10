@@ -354,6 +354,13 @@ describe("Chat Completions", function () {
         expect.objectContaining(geminiExpected),
       );
       expect(gemini.systemContent).toEqual("You are a support agent.");
+
+      // Gemini API (same formatting as gemini_chat)
+      const geminiApi = boundPrompt.format("gemini_api_chat");
+      expect(geminiApi.llmPrompt as ProviderMessage[]).toEqual(
+        expect.objectContaining(geminiExpected),
+      );
+      expect(geminiApi.systemContent).toEqual("You are a support agent.");
     });
 
     test("binds history correctly", async () => {
@@ -406,6 +413,134 @@ describe("Chat Completions", function () {
         { content: "You are a support agent.", role: "system" },
         { content: "User message 1", role: "user" },
       ]);
+    });
+
+    test("gemini parts passthrough for history with function calls", async () => {
+      const historyTemplateName = "my-history-template";
+      mockGetPromptV2({
+        axiosMock: axiosMock,
+        projectId: projectId,
+        promptTemplateVersionId: promptTemplateVersionId,
+        promptTemplateId: promptTemplateId,
+        promptTemplateName: historyTemplateName,
+        promptContent: templateWithHistory,
+        environment: environment,
+      });
+
+      const templatePrompt = await client.prompts.get({
+        projectId: projectId,
+        templateName: historyTemplateName,
+        environment: environment,
+      });
+
+      // History containing Gemini-format messages with function calls/responses
+      const geminiHistory = [
+        { role: "user" as const, content: "What is the weather?" },
+        {
+          role: "model" as const,
+          parts: [
+            {
+              functionCall: {
+                name: "get_weather",
+                args: { location: "Seattle" },
+              },
+            },
+          ],
+        },
+        {
+          role: "user" as const,
+          parts: [
+            {
+              functionResponse: {
+                name: "get_weather",
+                response: { temperature: "72°F" },
+              },
+            },
+          ],
+        },
+        {
+          role: "model" as const,
+          parts: [{ text: "It's 72°F in Seattle." }],
+        },
+      ];
+
+      const boundPrompt = templatePrompt.bind(
+        { number: 1 },
+        geminiHistory as any[],
+      );
+      const formatted = boundPrompt.format("gemini_chat");
+
+      // The history messages with 'parts' should be passed through
+      const llmPrompt = formatted.llmPrompt as any[];
+      // Should have: 4 history messages + 1 template user message = 5
+      // (system is stripped for Gemini)
+      expect(llmPrompt.length).toBe(5);
+
+      // First history message: standard content → wrapped in parts
+      expect(llmPrompt[0]).toEqual({
+        role: "user",
+        parts: [{ text: "What is the weather?" }],
+      });
+
+      // Second: model with functionCall parts — passed through
+      expect(llmPrompt[1].role).toEqual("model");
+      expect(llmPrompt[1].parts[0]).toHaveProperty("functionCall");
+
+      // Third: user with functionResponse parts — passed through
+      expect(llmPrompt[2].role).toEqual("user");
+      expect(llmPrompt[2].parts[0]).toHaveProperty("functionResponse");
+
+      // Fourth: model with text parts — passed through
+      expect(llmPrompt[3]).toEqual({
+        role: "model",
+        parts: [{ text: "It's 72°F in Seattle." }],
+      });
+
+      // Fifth: template user message
+      expect(llmPrompt[4]).toEqual({
+        role: "user",
+        parts: [{ text: "User message 1" }],
+      });
+    });
+
+    test("gemini parts passthrough translates assistant to model", async () => {
+      const historyTemplateName = "my-history-template";
+      mockGetPromptV2({
+        axiosMock: axiosMock,
+        projectId: projectId,
+        promptTemplateVersionId: promptTemplateVersionId,
+        promptTemplateId: promptTemplateId,
+        promptTemplateName: historyTemplateName,
+        promptContent: templateWithHistory,
+        environment: environment,
+      });
+
+      const templatePrompt = await client.prompts.get({
+        projectId: projectId,
+        templateName: historyTemplateName,
+        environment: environment,
+      });
+
+      // History with "assistant" role + parts (should be translated to "model")
+      const history = [
+        {
+          role: "assistant" as const,
+          parts: [{ text: "I can help with that" }],
+        },
+      ];
+
+      const boundPrompt = templatePrompt.bind(
+        { number: 1 },
+        history as any[],
+      );
+      const formatted = boundPrompt.format("gemini_chat");
+      const llmPrompt = formatted.llmPrompt as any[];
+
+      // First message: assistant → model
+      expect(llmPrompt[0]).toEqual({
+        role: "model",
+        parts: [{ text: "I can help with that" }],
+      });
     });
 
     test("detects history given when not expected", async () => {
@@ -1149,6 +1284,31 @@ describe("Chat Completions", function () {
       const boundPrompt = templatePrompt.bind(variables);
 
       const formattedPrompt = boundPrompt.format("gemini_chat");
+
+      expect(formattedPrompt.toolSchema).toEqual([
+        {
+          functionDeclarations: [
+            {
+              name: "get_weather",
+              description: "Get the weather in a given location",
+              parameters: { location: "SF" },
+            },
+          ],
+        },
+      ]);
+    });
+
+    test("formats gemini_api_chat tool schema (same as gemini_chat)", async () => {
+      setupPromptMockWithToolSchema();
+      const templatePrompt = await client.prompts.get({
+        projectId,
+        templateName,
+        environment,
+      });
+
+      const boundPrompt = templatePrompt.bind(variables);
+
+      const formattedPrompt = boundPrompt.format("gemini_api_chat");
 
       expect(formattedPrompt.toolSchema).toEqual([
         {

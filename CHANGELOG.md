@@ -3,6 +3,13 @@
 
 Notable additions, fixes, or breaking changes to the Freeplay SDK.
 
+## [0.5.4] - 2026-02-10
+
+### Added
+
+- **`gemini_api_chat` flavor**: New flavor for the Gemini API (`@google/generative-ai` SDK). `GeminiApiLLMAdapter` extends `GeminiLLMAdapter` and returns `provider: "gemini"`, while `gemini_chat` continues to return `provider: "vertex"` for Vertex AI users.
+- **Gemini message parts passthrough**: History messages already in Gemini format (with `parts`, e.g., function calls and function responses) are now passed through without re-wrapping. Role `"assistant"` and `"model"` are both correctly mapped to `"model"`.
+
 ## [0.5.3] - 2025-12-29
 
 ### Added
