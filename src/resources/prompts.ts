@@ -419,7 +419,7 @@ export class BoundPrompt {
         function: schema,
         type: "function",
       }));
-    } else if (flavorName === "gemini_chat") {
+    } else if (flavorName === "gemini_chat" || flavorName === "gemini_api_chat") {
       return [
         {
           functionDeclarations: toolSchema.map((schema) => ({

@@ -163,6 +163,8 @@ export class LLMAdapters {
         return new MistralLLMAdapter();
       case "gemini_chat":
         return new GeminiLLMAdapter();
+      case "gemini_api_chat":
+        return new GeminiApiLLMAdapter();
       case "amazon_bedrock_converse":
         return new BedrockConverseAdapter();
       default:
@@ -335,13 +337,17 @@ export class GeminiLLMAdapter implements ILLMAdapter<GeminiChatMessage[]> {
 
   toLLMSyntax(messages: ProviderMessage[]): GeminiChatMessage[] {
     return messages
-      .filter(
-        (message) =>
-          (typeof message.content === "string" ||
-            Array.isArray(message.content)) &&
-          message.role != "system",
-      )
+      .filter((message) => message.role !== "system")
       .map((message) => {
+        // Already in Gemini format (e.g., history from previous turns
+        // with function calls, function responses, or multi-part content)
+        if ("parts" in message && message.parts) {
+          return {
+            role: this.translateRole(message.role),
+            parts: message.parts as GeminiPart[],
+          };
+        }
+
         if (typeof message?.content === "string") {
           return {
             role: this.translateRole(message.role),
@@ -384,12 +390,19 @@ export class GeminiLLMAdapter implements ILLMAdapter<GeminiChatMessage[]> {
       case "user":
         return "user";
       case "assistant":
+      case "model":
         return "model";
       default:
         throw new FreeplayConfigurationError(
           `Unknown role for Gemini prompt: ${role}.`,
         );
     }
+  }
+}
+
+export class GeminiApiLLMAdapter extends GeminiLLMAdapter {
+  provider(): string {
+    return "gemini";
   }
 }
 
@@ -487,13 +500,15 @@ export type FlavorSpecifier =
   | "llama_3_chat"
   | "baseten_mistral_chat"
   | "mistral_chat"
-  | "gemini_chat";
+  | "gemini_chat"
+  | "gemini_api_chat";
 export type Provider =
   | "openai"
   | "azure_openai"
   | "anthropic"
   | "sagemaker"
   | "vertex"
+  | "gemini"
   | "baseten"
   | "bedrock";
 
