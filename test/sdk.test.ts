@@ -543,6 +543,78 @@ describe("Chat Completions", function () {
       });
     });
 
+    test("gemini parts passthrough for history with inline media", async () => {
+      const historyTemplateName = "my-history-template";
+      mockGetPromptV2({
+        axiosMock: axiosMock,
+        projectId: projectId,
+        promptTemplateVersionId: promptTemplateVersionId,
+        promptTemplateId: promptTemplateId,
+        promptTemplateName: historyTemplateName,
+        promptContent: templateWithHistory,
+        environment: environment,
+      });
+
+      const templatePrompt = await client.prompts.get({
+        projectId: projectId,
+        templateName: historyTemplateName,
+        environment: environment,
+      });
+
+      // History containing Gemini-format messages with inline media
+      const geminiHistory = [
+        {
+          role: "user" as const,
+          parts: [
+            { text: "What's in this image?" },
+            {
+              inlineData: {
+                mimeType: "image/png",
+                data: "iVBORw0KGgoAAAANSUhEUg==",
+              },
+            },
+          ],
+        },
+        {
+          role: "model" as const,
+          parts: [{ text: "I see a cat in the image." }],
+        },
+      ];
+
+      const boundPrompt = templatePrompt.bind(
+        { number: 1 },
+        geminiHistory as any[],
+      );
+      const formatted = boundPrompt.format("gemini_chat");
+
+      const llmPrompt = formatted.llmPrompt as any[];
+      // Should have: 2 history messages + 1 template user message = 3
+      // (system is stripped for Gemini)
+      expect(llmPrompt.length).toBe(3);
+
+      // First: user message with text + inlineData parts — passed through
+      expect(llmPrompt[0].role).toEqual("user");
+      expect(llmPrompt[0].parts.length).toBe(2);
+      expect(llmPrompt[0].parts[0]).toEqual({ text: "What's in this image?" });
+      expect(llmPrompt[0].parts[1]).toHaveProperty("inlineData");
+      expect(llmPrompt[0].parts[1].inlineData.mimeType).toEqual("image/png");
+      expect(llmPrompt[0].parts[1].inlineData.data).toEqual(
+        "iVBORw0KGgoAAAANSUhEUg==",
+      );
+
+      // Second: model text response — passed through
+      expect(llmPrompt[1]).toEqual({
+        role: "model",
+        parts: [{ text: "I see a cat in the image." }],
+      });
+
+      // Third: template user message
+      expect(llmPrompt[2]).toEqual({
+        role: "user",
+        parts: [{ text: "User message 1" }],
+      });
+    });
+
     test("detects history given when not expected", async () => {
       setupPromptMock();
       const templatePrompt = await client.prompts.get({
