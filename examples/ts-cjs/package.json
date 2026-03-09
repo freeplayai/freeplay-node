@@ -14,6 +14,7 @@
     "example": "source ../../.env && ts-node testRunExampleOpenAI.ts",
     "test-run": "source ../../.env && ts-node testRunWithAgentDataset.ts",
     "vertex": "source ../../.env && ts-node vertexGeminiTools.ts",
-    "nested-traces": "source ../../.env && ts-node traceWithParentId.ts"
+    "nested-traces": "source ../../.env && ts-node traceWithParentId.ts",
+    "openai-responses": "source ../../.env && ts-node openaiResponsesApi.ts"
   }
 }

@@ -1394,6 +1394,28 @@ describe("Chat Completions", function () {
         },
       ]);
     });
+
+    test("formats openai_responses tool schema (flat format)", async () => {
+      setupPromptMockWithToolSchema();
+      const templatePrompt = await client.prompts.get({
+        projectId,
+        templateName,
+        environment,
+      });
+
+      const boundPrompt = templatePrompt.bind(variables);
+
+      const formattedPrompt = boundPrompt.format("openai_responses");
+
+      expect(formattedPrompt.toolSchema).toEqual([
+        {
+          type: "function",
+          name: "get_weather",
+          description: "Get the weather in a given location",
+          parameters: { location: "SF" },
+        },
+      ]);
+    });
   });
 
   describe("Recording", function () {

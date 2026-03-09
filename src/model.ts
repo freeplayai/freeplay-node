@@ -14,7 +14,7 @@ export type MediaSlot = {
 };
 
 export type StrictChatMessage = {
-  role: "system" | "assistant" | "user";
+  role: "system" | "assistant" | "user" | "developer";
   content: string;
   kind?: string;
 };
@@ -141,8 +141,58 @@ export type LLMMessage = string | ProviderMessage[];
 
 export type CustomMetadata = Record<string, string | number | boolean>;
 
+// -- Role support infrastructure --
+
+export type RoleSupport = {
+  supported: ReadonlySet<string>;
+  coerceMap: Readonly<Record<string, string>>;
+};
+
+const DEFAULT_ROLE_SUPPORT: RoleSupport = {
+  supported: new Set(["system", "user", "assistant"]),
+  coerceMap: {},
+};
+
+const OPENAI_ROLE_SUPPORT: RoleSupport = {
+  supported: new Set(["system", "user", "assistant", "tool"]),
+  coerceMap: { developer: "system" },
+};
+
+const OPENAI_RESPONSES_ROLE_SUPPORT: RoleSupport = {
+  supported: new Set(["system", "user", "assistant", "developer", "tool"]),
+  coerceMap: {},
+};
+
+const GEMINI_ROLE_SUPPORT: RoleSupport = {
+  supported: new Set(["system", "user", "assistant", "model"]),
+  coerceMap: {},
+};
+
+export function prepareMessages(
+  messages: ProviderMessage[],
+  roleSupport: RoleSupport,
+): ProviderMessage[] {
+  return messages.map((message) => {
+    const role = message.role;
+    if (roleSupport.supported.has(role)) {
+      return message;
+    }
+    const coerced = roleSupport.coerceMap[role];
+    if (coerced) {
+      console.warn(
+        `Role '${role}' is not natively supported by this flavor. Coercing to '${coerced}'.`,
+      );
+      return { ...message, role: coerced };
+    }
+    throw new FreeplayConfigurationError(
+      `Role '${role}' is not supported by this flavor.`,
+    );
+  });
+}
+
 // Thin requirements of a "Flavor".
 interface ILLMAdapter<LLMFormat> {
+  roleSupport: RoleSupport;
   provider(): string;
 
   toLLMSyntax(messages: ProviderMessage[]): LLMFormat;
@@ -165,6 +215,8 @@ export class LLMAdapters {
         return new GeminiLLMAdapter();
       case "gemini_api_chat":
         return new GeminiApiLLMAdapter();
+      case "openai_responses":
+        return new OpenAIResponsesAdapter();
       case "amazon_bedrock_converse":
         return new BedrockConverseAdapter();
       default:
@@ -176,6 +228,8 @@ export class LLMAdapters {
 }
 
 export class AnthropicLLMAdapter implements ILLMAdapter<ProviderMessage[]> {
+  roleSupport = DEFAULT_ROLE_SUPPORT;
+
   provider(): string {
     return "anthropic";
   }
@@ -231,6 +285,8 @@ export class AnthropicLLMAdapter implements ILLMAdapter<ProviderMessage[]> {
 }
 
 export class OpenAILLMAdapter implements ILLMAdapter<ProviderMessage[]> {
+  roleSupport = OPENAI_ROLE_SUPPORT;
+
   provider(): string {
     return "openai";
   }
@@ -295,7 +351,33 @@ export class OpenAILLMAdapter implements ILLMAdapter<ProviderMessage[]> {
   }
 }
 
+export class OpenAIResponsesAdapter extends OpenAILLMAdapter {
+  roleSupport = OPENAI_RESPONSES_ROLE_SUPPORT;
+
+  toLLMSyntax(messages: ProviderMessage[]): ProviderMessage[] {
+    // Strip system messages (they go to the `instructions` parameter in Responses API)
+    const nonSystemMessages = messages.filter(
+      (message) => message.role !== "system",
+    );
+
+    // Run parent's media formatting, then wrap each message in Responses API format
+    const formatted = super.toLLMSyntax(nonSystemMessages);
+    return formatted.map((message) => {
+      // Pass through messages that are already in Responses API format (e.g. from history)
+      if ("type" in message) {
+        return message;
+      }
+      return {
+        ...message,
+        type: "message",
+      };
+    });
+  }
+}
+
 export class Llama3LLMAdapter implements ILLMAdapter<string> {
+  roleSupport = DEFAULT_ROLE_SUPPORT;
+
   provider(): string {
     return "sagemaker";
   }
@@ -311,6 +393,8 @@ export class Llama3LLMAdapter implements ILLMAdapter<string> {
 export class BasetenMistralLLMAdapter
   implements ILLMAdapter<ProviderMessage[]>
 {
+  roleSupport = DEFAULT_ROLE_SUPPORT;
+
   provider(): string {
     return "baseten";
   }
@@ -321,6 +405,8 @@ export class BasetenMistralLLMAdapter
 }
 
 export class MistralLLMAdapter implements ILLMAdapter<ProviderMessage[]> {
+  roleSupport = DEFAULT_ROLE_SUPPORT;
+
   provider(): string {
     return "bedrock";
   }
@@ -331,6 +417,8 @@ export class MistralLLMAdapter implements ILLMAdapter<ProviderMessage[]> {
 }
 
 export class GeminiLLMAdapter implements ILLMAdapter<GeminiChatMessage[]> {
+  roleSupport = GEMINI_ROLE_SUPPORT;
+
   provider(): string {
     return "vertex";
   }
@@ -407,6 +495,8 @@ export class GeminiApiLLMAdapter extends GeminiLLMAdapter {
 }
 
 export class BedrockConverseAdapter implements ILLMAdapter<ProviderMessage[]> {
+  roleSupport = DEFAULT_ROLE_SUPPORT;
+
   provider(): string {
     return "bedrock";
   }
@@ -501,7 +591,8 @@ export type FlavorSpecifier =
   | "baseten_mistral_chat"
   | "mistral_chat"
   | "gemini_chat"
-  | "gemini_api_chat";
+  | "gemini_api_chat"
+  | "openai_responses";
 export type Provider =
   | "openai"
   | "azure_openai"

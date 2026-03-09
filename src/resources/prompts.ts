@@ -8,6 +8,7 @@ import {
   InputVariables,
   isSystemMessage,
   LLMAdapters,
+  prepareMessages,
   LLMParameters,
   MediaContentBase64,
   MediaContentUrl,
@@ -258,7 +259,7 @@ export function getCallInfo(
 }
 
 type TemplateChatMessage = {
-  role: "system" | "user" | "assistant";
+  role: "system" | "user" | "assistant" | "developer";
   content: string;
   media_slots?: MediaSlot[];
 };
@@ -419,6 +420,13 @@ export class BoundPrompt {
         function: schema,
         type: "function",
       }));
+    } else if (flavorName === "openai_responses") {
+      return toolSchema.map((schema) => ({
+        type: "function",
+        name: schema.name,
+        description: schema.description,
+        parameters: schema.parameters,
+      }));
     } else if (flavorName === "gemini_chat" || flavorName === "gemini_api_chat") {
       return [
         {
@@ -441,7 +449,11 @@ export class BoundPrompt {
     flavorName: string,
   ): Record<string, any> {
     // For OpenAI and Azure OpenAI, the normalized format is compatible with the API format
-    if (["openai_chat", "azure_openai_chat"].includes(flavorName)) {
+    if (
+      ["openai_chat", "azure_openai_chat", "openai_responses"].includes(
+        flavorName,
+      )
+    ) {
       return outputSchema;
     }
     // Currently only OpenAI-compatible models support output schema
@@ -454,8 +466,12 @@ export class BoundPrompt {
     flavorName?: string,
   ): FormattedPrompt<MessageType> {
     const finalFlavor = flavorName || this.promptInfo.flavorName;
+    const effectivePromptInfo = flavorName
+      ? { ...this.promptInfo, flavorName: finalFlavor }
+      : this.promptInfo;
     const llmAdapter = LLMAdapters.adapterForFlavor(finalFlavor);
-    const llmFormat = llmAdapter.toLLMSyntax(this.messages);
+    const prepared = prepareMessages(this.messages, llmAdapter.roleSupport);
+    const llmFormat = llmAdapter.toLLMSyntax(prepared);
     const llmFormatText = typeof llmFormat === "string" ? llmFormat : undefined;
     const formattedToolSchema = this.toolSchema
       ? this.formatToolSchema(this.toolSchema, finalFlavor)
@@ -466,7 +482,7 @@ export class BoundPrompt {
 
     if (llmFormatText) {
       return new FormattedPrompt<MessageType>(
-        this.promptInfo,
+        effectivePromptInfo,
         this.messages as MessageType[],
         undefined,
         llmFormatText,
@@ -475,7 +491,7 @@ export class BoundPrompt {
       );
     } else {
       return new FormattedPrompt<MessageType>(
-        this.promptInfo,
+        effectivePromptInfo,
         this.messages as MessageType[],
         llmFormat,
         undefined,
@@ -520,8 +536,9 @@ export class FormattedPrompt<
       | undefined;
   }
 
-  allMessages(newMessage: MessageType): MessageType[] {
-    return [...this.messages, newMessage];
+  allMessages(newMessage: MessageType | MessageType[]): MessageType[] {
+    const newMessages = Array.isArray(newMessage) ? newMessage : [newMessage];
+    return [...this.messages, ...newMessages];
   }
 }
 
