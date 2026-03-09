@@ -1501,7 +1501,7 @@ describe("Chat Completions", function () {
         inputs: variables,
         sessionInfo: session,
         promptVersionInfo: formattedPrompt.promptInfo,
-        callInfo: getCallInfo(formattedPrompt.promptInfo, new Date(), end),
+        callInfo: getCallInfo(formattedPrompt.promptInfo, start, end),
         responseInfo: {
           isComplete: true,
         },
