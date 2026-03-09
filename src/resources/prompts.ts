@@ -427,7 +427,10 @@ export class BoundPrompt {
         description: schema.description,
         parameters: schema.parameters,
       }));
-    } else if (flavorName === "gemini_chat" || flavorName === "gemini_api_chat") {
+    } else if (
+      flavorName === "gemini_chat" ||
+      flavorName === "gemini_api_chat"
+    ) {
       return [
         {
           functionDeclarations: toolSchema.map((schema) => ({
@@ -536,7 +539,7 @@ export class FormattedPrompt<
       | undefined;
   }
 
-  allMessages(newMessage: MessageType | MessageType[]): MessageType[] {
+  allMessages(newMessage: unknown): ProviderMessage[] {
     const newMessages = Array.isArray(newMessage) ? newMessage : [newMessage];
     return [...this.messages, ...newMessages];
   }

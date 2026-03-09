@@ -58,31 +58,18 @@ async function main() {
   console.log("Completion:", completion);
 
   // Record to Freeplay
-  const session = fpClient.sessions.create();
-  const messages = formattedPrompt.allMessages(
-    completion.output as any,
-  );
+  const messages = formattedPrompt.allMessages(completion.output);
 
   await fpClient.recordings.create({
     projectId,
     allMessages: messages,
-    sessionInfo: getSessionInfo(session),
     inputs: inputVariables,
     promptVersionInfo: formattedPrompt.promptInfo,
-    callInfo: getCallInfo(
-      formattedPrompt.promptInfo,
-      start,
-      end,
-      {
-        promptTokens: completion.usage.input_tokens,
-        completionTokens: completion.usage.output_tokens,
-      },
-      "batch",
-    ),
+    callInfo: getCallInfo(formattedPrompt.promptInfo, start, end, {
+      promptTokens: completion.usage.input_tokens,
+      completionTokens: completion.usage.output_tokens,
+    }),
     toolSchema: formattedPrompt.toolSchema,
-    responseInfo: {
-      isComplete: true,
-    },
   });
 
   console.log("Recording created successfully");
