@@ -353,23 +353,10 @@ export class OpenAIResponsesAdapter extends OpenAILLMAdapter {
   roleSupport = OPENAI_RESPONSES_ROLE_SUPPORT;
 
   toLLMSyntax(messages: ProviderMessage[]): ProviderMessage[] {
-    // Strip system messages (they go to the `instructions` parameter in Responses API)
-    const nonSystemMessages = messages.filter(
-      (message) => message.role !== "system",
-    );
-
-    // Run parent's media formatting, then wrap each message in Responses API format
-    const formatted = super.toLLMSyntax(nonSystemMessages);
-    return formatted.map((message) => {
-      // Pass through messages that are already in Responses API format (e.g. from history)
-      if ("type" in message) {
-        return message;
-      }
-      return {
-        ...message,
-        type: "message",
-      };
-    });
+    const formatted = super.toLLMSyntax(messages);
+    return formatted
+      .filter((message) => message.role !== "system")
+      .map((message) => ({ type: "message", ...message }));
   }
 }
 

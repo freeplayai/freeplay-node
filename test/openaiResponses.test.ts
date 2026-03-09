@@ -79,7 +79,7 @@ describe("OpenAIResponsesAdapter", () => {
     ]);
   });
 
-  test("passes through messages already in Responses API format", () => {
+  test("wraps all messages with type: message", () => {
     const messages: ProviderMessage[] = [
       { role: "user", content: "Hello" },
       {
