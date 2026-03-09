@@ -469,10 +469,14 @@ export class BoundPrompt {
     flavorName?: string,
   ): FormattedPrompt<MessageType> {
     const finalFlavor = flavorName || this.promptInfo.flavorName;
-    const effectivePromptInfo = flavorName
-      ? { ...this.promptInfo, flavorName: finalFlavor }
-      : this.promptInfo;
     const llmAdapter = LLMAdapters.adapterForFlavor(finalFlavor);
+    const effectivePromptInfo = flavorName
+      ? {
+          ...this.promptInfo,
+          flavorName: finalFlavor,
+          provider: llmAdapter.provider(),
+        }
+      : this.promptInfo;
     const prepared = prepareMessages(this.messages, llmAdapter.roleSupport);
     const llmFormat = llmAdapter.toLLMSyntax(prepared);
     const llmFormatText = typeof llmFormat === "string" ? llmFormat : undefined;

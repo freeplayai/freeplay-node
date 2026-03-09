@@ -344,12 +344,12 @@ describe("OpenAI Responses - end to end formatting", () => {
     });
   });
 
-  test("effective flavor reflected in promptInfo when overridden", async () => {
+  test("effective flavor and provider reflected in promptInfo when overridden", async () => {
     const template: TemplateMessage[] = [
       { role: "user", content: "{{question}}" },
     ];
 
-    // Set up with openai_chat as the original flavor
+    // Set up with anthropic_chat as the original flavor
     mockGetPromptV2({
       axiosMock,
       projectId,
@@ -358,7 +358,8 @@ describe("OpenAI Responses - end to end formatting", () => {
       promptTemplateName: templateName,
       promptContent: template,
       environment,
-      flavor_name: "openai_chat",
+      flavor_name: "anthropic_chat",
+      provider: "anthropic",
     });
 
     const templatePrompt = await client.prompts.get({
@@ -371,5 +372,6 @@ describe("OpenAI Responses - end to end formatting", () => {
     const formatted = boundPrompt.format("openai_responses");
 
     expect(formatted.promptInfo.flavorName).toBe("openai_responses");
+    expect(formatted.promptInfo.provider).toBe("openai");
   });
 });
