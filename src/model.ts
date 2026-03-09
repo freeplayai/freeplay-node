@@ -141,8 +141,6 @@ export type LLMMessage = string | ProviderMessage[];
 
 export type CustomMetadata = Record<string, string | number | boolean>;
 
-// -- Role support infrastructure --
-
 export type RoleSupport = {
   supported: ReadonlySet<string>;
   coerceMap: Readonly<Record<string, string>>;
