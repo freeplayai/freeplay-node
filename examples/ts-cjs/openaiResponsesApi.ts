@@ -1,4 +1,4 @@
-import Freeplay, { getCallInfo, getSessionInfo } from "freeplay";
+import Freeplay, { getCallInfo } from "freeplay";
 import OpenAI from "openai";
 
 async function main() {
