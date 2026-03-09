@@ -490,7 +490,7 @@ export class BoundPrompt {
     if (llmFormatText) {
       return new FormattedPrompt<MessageType>(
         effectivePromptInfo,
-        this.messages as MessageType[],
+        prepared as MessageType[],
         undefined,
         llmFormatText,
         formattedToolSchema,
@@ -499,7 +499,7 @@ export class BoundPrompt {
     } else {
       return new FormattedPrompt<MessageType>(
         effectivePromptInfo,
-        this.messages as MessageType[],
+        prepared as MessageType[],
         llmFormat,
         undefined,
         formattedToolSchema,
