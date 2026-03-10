@@ -8,6 +8,7 @@ import {
   InputVariables,
   isSystemMessage,
   LLMAdapters,
+  prepareMessages,
   LLMParameters,
   MediaContentBase64,
   MediaContentUrl,
@@ -258,7 +259,7 @@ export function getCallInfo(
 }
 
 type TemplateChatMessage = {
-  role: "system" | "user" | "assistant";
+  role: "system" | "user" | "assistant" | "developer";
   content: string;
   media_slots?: MediaSlot[];
 };
@@ -419,7 +420,17 @@ export class BoundPrompt {
         function: schema,
         type: "function",
       }));
-    } else if (flavorName === "gemini_chat" || flavorName === "gemini_api_chat") {
+    } else if (flavorName === "openai_responses") {
+      return toolSchema.map((schema) => ({
+        type: "function",
+        name: schema.name,
+        description: schema.description,
+        parameters: schema.parameters,
+      }));
+    } else if (
+      flavorName === "gemini_chat" ||
+      flavorName === "gemini_api_chat"
+    ) {
       return [
         {
           functionDeclarations: toolSchema.map((schema) => ({
@@ -441,7 +452,11 @@ export class BoundPrompt {
     flavorName: string,
   ): Record<string, any> {
     // For OpenAI and Azure OpenAI, the normalized format is compatible with the API format
-    if (["openai_chat", "azure_openai_chat"].includes(flavorName)) {
+    if (
+      ["openai_chat", "azure_openai_chat", "openai_responses"].includes(
+        flavorName,
+      )
+    ) {
       return outputSchema;
     }
     // Currently only OpenAI-compatible models support output schema
@@ -455,7 +470,19 @@ export class BoundPrompt {
   ): FormattedPrompt<MessageType> {
     const finalFlavor = flavorName || this.promptInfo.flavorName;
     const llmAdapter = LLMAdapters.adapterForFlavor(finalFlavor);
-    const llmFormat = llmAdapter.toLLMSyntax(this.messages);
+    const effectivePromptInfo = flavorName
+      ? {
+          ...this.promptInfo,
+          flavorName: finalFlavor,
+          provider: llmAdapter.provider(),
+        }
+      : this.promptInfo;
+    const prepared = prepareMessages(
+      this.messages,
+      llmAdapter.roleSupport,
+      finalFlavor,
+    );
+    const llmFormat = llmAdapter.toLLMSyntax(prepared);
     const llmFormatText = typeof llmFormat === "string" ? llmFormat : undefined;
     const formattedToolSchema = this.toolSchema
       ? this.formatToolSchema(this.toolSchema, finalFlavor)
@@ -466,8 +493,8 @@ export class BoundPrompt {
 
     if (llmFormatText) {
       return new FormattedPrompt<MessageType>(
-        this.promptInfo,
-        this.messages as MessageType[],
+        effectivePromptInfo,
+        prepared as MessageType[],
         undefined,
         llmFormatText,
         formattedToolSchema,
@@ -475,8 +502,8 @@ export class BoundPrompt {
       );
     } else {
       return new FormattedPrompt<MessageType>(
-        this.promptInfo,
-        this.messages as MessageType[],
+        effectivePromptInfo,
+        prepared as MessageType[],
         llmFormat,
         undefined,
         formattedToolSchema,
@@ -520,8 +547,9 @@ export class FormattedPrompt<
       | undefined;
   }
 
-  allMessages(newMessage: MessageType): MessageType[] {
-    return [...this.messages, newMessage];
+  allMessages(newMessage: unknown): ProviderMessage[] {
+    const newMessages = Array.isArray(newMessage) ? newMessage : [newMessage];
+    return [...this.messages, ...newMessages];
   }
 }
 
