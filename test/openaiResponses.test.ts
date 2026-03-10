@@ -137,7 +137,11 @@ describe("prepareMessages - role coercion", () => {
       { role: "user", content: "Hello" },
     ];
 
-    const result = prepareMessages(messages, adapter.roleSupport);
+    const result = prepareMessages(
+      messages,
+      adapter.roleSupport,
+      "openai_responses",
+    );
 
     expect(result).toEqual(messages);
   });
@@ -150,7 +154,11 @@ describe("prepareMessages - role coercion", () => {
     ];
 
     const warnSpy = jest.spyOn(console, "warn").mockImplementation();
-    const result = prepareMessages(messages, adapter.roleSupport);
+    const result = prepareMessages(
+      messages,
+      adapter.roleSupport,
+      "openai_chat",
+    );
     warnSpy.mockRestore();
 
     expect(result).toEqual([
@@ -165,9 +173,9 @@ describe("prepareMessages - role coercion", () => {
       { role: "developer", content: "Be concise." },
     ];
 
-    expect(() => prepareMessages(messages, adapter.roleSupport)).toThrow(
-      FreeplayConfigurationError,
-    );
+    expect(() =>
+      prepareMessages(messages, adapter.roleSupport, "anthropic_chat"),
+    ).toThrow(FreeplayConfigurationError);
   });
 
   test("tool role passes through for openai_chat", () => {
@@ -177,7 +185,11 @@ describe("prepareMessages - role coercion", () => {
       { role: "tool", content: '{"result": 42}', tool_call_id: "call_1" },
     ];
 
-    const result = prepareMessages(messages, adapter.roleSupport);
+    const result = prepareMessages(
+      messages,
+      adapter.roleSupport,
+      "openai_chat",
+    );
 
     expect(result).toEqual(messages);
   });
@@ -189,7 +201,11 @@ describe("prepareMessages - role coercion", () => {
       { role: "tool", content: '{"result": 42}', tool_call_id: "call_1" },
     ];
 
-    const result = prepareMessages(messages, adapter.roleSupport);
+    const result = prepareMessages(
+      messages,
+      adapter.roleSupport,
+      "openai_responses",
+    );
 
     expect(result).toEqual(messages);
   });
@@ -200,9 +216,9 @@ describe("prepareMessages - role coercion", () => {
       { role: "tool", content: '{"result": 42}' },
     ];
 
-    expect(() => prepareMessages(messages, adapter.roleSupport)).toThrow(
-      FreeplayConfigurationError,
-    );
+    expect(() =>
+      prepareMessages(messages, adapter.roleSupport, "anthropic_chat"),
+    ).toThrow(FreeplayConfigurationError);
   });
 });
 

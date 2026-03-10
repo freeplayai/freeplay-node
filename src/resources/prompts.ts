@@ -477,7 +477,11 @@ export class BoundPrompt {
           provider: llmAdapter.provider(),
         }
       : this.promptInfo;
-    const prepared = prepareMessages(this.messages, llmAdapter.roleSupport);
+    const prepared = prepareMessages(
+      this.messages,
+      llmAdapter.roleSupport,
+      finalFlavor,
+    );
     const llmFormat = llmAdapter.toLLMSyntax(prepared);
     const llmFormatText = typeof llmFormat === "string" ? llmFormat : undefined;
     const formattedToolSchema = this.toolSchema

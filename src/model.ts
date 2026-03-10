@@ -169,6 +169,7 @@ const GEMINI_ROLE_SUPPORT: RoleSupport = {
 export function prepareMessages(
   messages: ProviderMessage[],
   roleSupport: RoleSupport,
+  flavorName: string,
 ): ProviderMessage[] {
   return messages.map((message) => {
     const role = message.role;
@@ -183,7 +184,7 @@ export function prepareMessages(
       return { ...message, role: coerced };
     }
     throw new FreeplayConfigurationError(
-      `Role '${role}' is not supported by this flavor.`,
+      `Role '${role}' is not supported by ${flavorName} flavor. Please update your prompt template in Freeplay to use a flavor that supports the '${role}' role.`,
     );
   });
 }
