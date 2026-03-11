@@ -2,6 +2,12 @@
 
 Notable additions, fixes, or breaking changes to the Freeplay SDK.
 
+## [0.6.1] - 2026-03-10
+
+### Fixed
+
+- **`openai_responses` adapter**: Content blocks now use Responses API native types (`input_text`, `input_image`, `input_file`) instead of Chat Completions types (`text`, `image_url`, `file`) which OpenAI rejects.
+
 ## [0.6.0] - 2026-03-09
 
 ### Added

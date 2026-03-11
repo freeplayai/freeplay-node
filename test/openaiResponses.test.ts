@@ -129,6 +129,169 @@ describe("OpenAIResponsesAdapter", () => {
   });
 });
 
+describe("OpenAIResponsesAdapter - content block types", () => {
+  const adapter = new OpenAIResponsesAdapter();
+
+  test("formats text content as input_text", () => {
+    const messages: ProviderMessage[] = [
+      {
+        role: "user",
+        content: [
+          { content_part_type: "text", text: "Hello world" },
+        ],
+      },
+    ];
+
+    const result = adapter.toLLMSyntax(messages);
+
+    expect(result).toEqual([
+      {
+        type: "message",
+        role: "user",
+        content: [{ type: "input_text", text: "Hello world" }],
+      },
+    ]);
+  });
+
+  test("formats image URL as input_image with flat image_url", () => {
+    const messages: ProviderMessage[] = [
+      {
+        role: "user",
+        content: [
+          { content_part_type: "text", text: "Describe this" },
+          {
+            content_part_type: "media_url",
+            url: "http://example.com/img.png",
+            slot_name: "image-1",
+            slot_type: "image",
+          },
+        ],
+      },
+    ];
+
+    const result = adapter.toLLMSyntax(messages);
+
+    expect(result).toEqual([
+      {
+        type: "message",
+        role: "user",
+        content: [
+          { type: "input_text", text: "Describe this" },
+          { type: "input_image", image_url: "http://example.com/img.png" },
+        ],
+      },
+    ]);
+  });
+
+  test("formats base64 image as input_image with data URI", () => {
+    const messages: ProviderMessage[] = [
+      {
+        role: "user",
+        content: [
+          {
+            content_part_type: "media_base64",
+            content_type: "image/png",
+            data: "abc123",
+            slot_name: "img",
+            slot_type: "image",
+          },
+        ],
+      },
+    ];
+
+    const result = adapter.toLLMSyntax(messages);
+
+    expect(result).toEqual([
+      {
+        type: "message",
+        role: "user",
+        content: [
+          { type: "input_image", image_url: "data:image/png;base64,abc123" },
+        ],
+      },
+    ]);
+  });
+
+  test("formats base64 file as input_file", () => {
+    const messages: ProviderMessage[] = [
+      {
+        role: "user",
+        content: [
+          {
+            content_part_type: "media_base64",
+            content_type: "application/pdf",
+            data: "pdfdata",
+            slot_name: "doc",
+            slot_type: "file",
+          },
+        ],
+      },
+    ];
+
+    const result = adapter.toLLMSyntax(messages);
+
+    expect(result).toEqual([
+      {
+        type: "message",
+        role: "user",
+        content: [
+          {
+            type: "input_file",
+            filename: "doc.pdf",
+            file_data: "data:application/pdf;base64,pdfdata",
+          },
+        ],
+      },
+    ]);
+  });
+
+  test("throws for audio base64 content", () => {
+    const messages: ProviderMessage[] = [
+      {
+        role: "user",
+        content: [
+          {
+            content_part_type: "media_base64",
+            content_type: "audio/mpeg",
+            data: "audiodata",
+            slot_name: "clip",
+            slot_type: "audio",
+          },
+        ],
+      },
+    ];
+
+    expect(() => adapter.toLLMSyntax(messages)).toThrow(
+      "Audio content is not yet supported by the OpenAI Responses API.",
+    );
+  });
+
+  test("passes through history content blocks unchanged", () => {
+    const messages: ProviderMessage[] = [
+      {
+        role: "user",
+        content: [
+          { type: "input_text", text: "already formatted" },
+          { type: "input_image", image_url: "http://example.com/img.png" },
+        ],
+      },
+    ];
+
+    const result = adapter.toLLMSyntax(messages);
+
+    expect(result).toEqual([
+      {
+        type: "message",
+        role: "user",
+        content: [
+          { type: "input_text", text: "already formatted" },
+          { type: "input_image", image_url: "http://example.com/img.png" },
+        ],
+      },
+    ]);
+  });
+});
+
 describe("prepareMessages - role coercion", () => {
   test("developer passes through for openai_responses", () => {
     const adapter = new OpenAIResponsesAdapter();
