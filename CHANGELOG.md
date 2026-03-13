@@ -2,6 +2,12 @@
 
 Notable additions, fixes, or breaking changes to the Freeplay SDK.
 
+## [0.6.2] - 2026-03-13
+
+### Fixed
+
+- Media content in recorded messages now uses provider-formatted objects instead of internal content_part_type objects, fixing validation errors when recording prompts with media inputs.
+
 ## [0.6.1] - 2026-03-10
 
 ### Fixed

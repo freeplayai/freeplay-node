@@ -477,12 +477,34 @@ export class BoundPrompt {
           provider: llmAdapter.provider(),
         }
       : this.promptInfo;
-    const prepared = prepareMessages(
+    let prepared = prepareMessages(
       this.messages,
       llmAdapter.roleSupport,
       finalFlavor,
     );
     const llmFormat = llmAdapter.toLLMSyntax(prepared);
+
+    // Kind of a hack: bound messages may contain internal content objects
+    // (content_part_type: "text", "media_base64", etc.) that aren't in any
+    // provider format. Ideally bind() wouldn't produce these internal objects.
+    // For now, re-run each media message through the adapter individually to
+    // get provider-formatted content while preserving messages the adapter
+    // would otherwise drop (e.g. system for Responses API).
+    prepared = prepared.map((msg) => {
+      if (
+        Array.isArray(msg.content) &&
+        msg.content.some(
+          (part: Record<string, any>) => "content_part_type" in part,
+        )
+      ) {
+        const formatted = llmAdapter.toLLMSyntax([msg]);
+        if (Array.isArray(formatted) && formatted.length > 0) {
+          return formatted[0];
+        }
+        return msg;
+      }
+      return msg;
+    });
     const llmFormatText = typeof llmFormat === "string" ? llmFormat : undefined;
     const formattedToolSchema = this.toolSchema
       ? this.formatToolSchema(this.toolSchema, finalFlavor)
