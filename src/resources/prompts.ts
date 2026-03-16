@@ -547,7 +547,14 @@ export class FormattedPrompt<
       | undefined;
   }
 
+  /**
+   * @deprecated allMessages() is deprecated and will be removed in a future version.
+   * Use formattedPrompt.llmPrompt with the completion output directly when constructing RecordPayload.
+   */
   allMessages(newMessage: unknown): ProviderMessage[] {
+    console.warn(
+      "[Freeplay] allMessages() is deprecated and will be removed in a future version. Use formattedPrompt.llmPrompt with the completion output directly when constructing RecordPayload.",
+    );
     const newMessages = Array.isArray(newMessage) ? newMessage : [newMessage];
     return [...this.messages, ...newMessages];
   }
