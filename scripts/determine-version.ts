@@ -132,28 +132,28 @@ async function handleStableRelease(
   packageName: string,
 ): Promise<VersionInfo> {
   try {
-    // Check if version was bumped compared to previous commit
-    const previousVersionCmd = "git show HEAD~1:package.json";
-    const previousPackageJsonStr = execSync(previousVersionCmd, {
+    // Check if version was bumped compared to latest published version on npm
+    const latestVersionCmd = `npm view ${packageName} version`;
+    const publishedVersion = execSync(latestVersionCmd, {
       encoding: "utf8",
-    });
-    const previousPackageJson: PackageJson = JSON.parse(previousPackageJsonStr);
+      stdio: ["pipe", "pipe", "ignore"],
+    }).trim();
 
-    if (currentVersion === previousPackageJson.version) {
+    if (currentVersion === publishedVersion) {
       throw new Error(
-        "No version bump detected in package.json for stable release",
+        `No version bump detected — package.json version ${currentVersion} matches the latest published version on npm`,
       );
     }
 
     console.log(
-      `Version bumped from ${previousPackageJson.version} to ${currentVersion}`,
+      `Version bumped from ${publishedVersion} (npm) to ${currentVersion}`,
     );
   } catch (error) {
     if ((error as Error).message.includes("No version bump detected")) {
       throw error;
     }
     console.log(
-      "Could not compare with previous version (possibly first commit)",
+      "Could not check npm for latest version (possibly first publish)",
     );
   }
 
