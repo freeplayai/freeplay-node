@@ -350,14 +350,60 @@ export class OpenAILLMAdapter implements ILLMAdapter<ProviderMessage[]> {
   }
 }
 
-export class OpenAIResponsesAdapter extends OpenAILLMAdapter {
+export class OpenAIResponsesAdapter implements ILLMAdapter<ProviderMessage[]> {
   roleSupport = OPENAI_RESPONSES_ROLE_SUPPORT;
 
+  provider(): string {
+    return "openai";
+  }
+
   toLLMSyntax(messages: ProviderMessage[]): ProviderMessage[] {
-    const formatted = super.toLLMSyntax(messages);
-    return formatted
+    return messages
       .filter((message) => message.role !== "system")
-      .map((message) => ({ type: "message", ...message }));
+      .map((message) => {
+        if (Array.isArray(message.content)) {
+          const newContent = message.content.map((item) => {
+            if (isTextContent(item)) {
+              return { type: "input_text", text: item.text };
+            } else if (isMediaContentUrl(item)) {
+              if (item.slot_type !== "image") {
+                throw freeplayError(
+                  "Message contains a non-image URL, but OpenAI Responses API only supports image URLs.",
+                );
+              }
+              return { type: "input_image", image_url: item.url };
+            } else if (isMediaContentBase64(item)) {
+              return this.formatBase64Content(item);
+            }
+            return item;
+          });
+
+          return { type: "message", ...message, content: newContent };
+        }
+
+        return { type: "message", ...message };
+      });
+  }
+
+  private formatBase64Content(
+    item: MediaContentBase64,
+  ): Record<string, any> {
+    if (item.slot_type === "audio") {
+      throw freeplayError(
+        "Audio content is not yet supported by the OpenAI Responses API.",
+      );
+    } else if (item.slot_type === "file") {
+      return {
+        type: "input_file",
+        filename: `${item.slot_name}.${item.content_type.split("/")[1]}`,
+        file_data: `data:${item.content_type};base64,${item.data}`,
+      };
+    } else {
+      return {
+        type: "input_image",
+        image_url: `data:${item.content_type};base64,${item.data}`,
+      };
+    }
   }
 }
 
