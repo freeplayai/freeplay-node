@@ -1634,21 +1634,18 @@ describe("Chat Completions", function () {
           role: "user",
           content: [
             {
-              content_part_type: "text",
+              type: "text",
               text: "Answer this question: How do these images look?",
             },
             {
-              content_part_type: "media_url",
+              type: "image_url",
               url: "http://localhost/bird.png",
-              slot_name: "image-1",
-              slot_type: "image",
+              media_type: "image",
             },
             {
-              content_part_type: "media_base64",
+              type: "image",
               content_type: "image/png",
               data: onePixelPng,
-              slot_name: "image-2",
-              slot_type: "image",
             },
           ],
         },

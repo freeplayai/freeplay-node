@@ -35,64 +35,52 @@ export type ProviderMessage = {
   [key: string]: any;
 };
 
-const hasContentPartType = (
-  record: Record<string, any>,
-  type: string,
-): boolean =>
-  "content_part_type" in record && record.content_part_type === type;
+// SimpleMediaMessage-compatible content block types.
+// These types serialize to JSON that matches the backend's SimpleMediaMessage schema.
 
-const hasMediaType = (
-  record: Record<string, any>,
-): record is { type: MediaType } =>
-  "slot_type" in record &&
-  ["audio", "video", "image", "file"].includes(record.slot_type);
-
-const hasStringValue = (
-  record: Record<string, any>,
-  key: string,
-): record is { content: string } =>
-  key in record && typeof record[key] === "string";
-
-export type MediaContentUrl = {
-  slot_name: string;
-  content_part_type: "media_url";
-  url: string;
-  slot_type: MediaType;
-};
-
-const isMediaContentUrl = (
-  record: Record<string, any>,
-): record is MediaContentUrl =>
-  hasContentPartType(record, "media_url") &&
-  hasMediaType(record) &&
-  hasStringValue(record, "url") &&
-  hasStringValue(record, "slot_name");
-
-export type MediaContentBase64 = {
-  slot_name: string;
-  content_part_type: "media_base64";
-  content_type: string;
-  data: string;
-  slot_type: MediaType;
-};
-
-const isMediaContentBase64 = (
-  record: Record<string, any>,
-): record is MediaContentBase64 =>
-  hasContentPartType(record, "media_base64") &&
-  hasMediaType(record) &&
-  hasStringValue(record, "content_type") &&
-  hasStringValue(record, "data") &&
-  hasStringValue(record, "slot_name");
-
-export type TextContent = {
-  content_part_type: "text";
+export type TextContentBlock = {
+  type: "text";
   text: string;
 };
 
-const isTextContent = (record: Record<string, any>): record is TextContent => {
-  return hasContentPartType(record, "text") && hasStringValue(record, "text");
+export type ImageUrlContentBlock = {
+  type: "image_url";
+  url: string;
+  media_type: "image";
 };
+
+export type ImageBase64ContentBlock = {
+  type: "image";
+  content_type: string;
+  data: string;
+};
+
+export type AudioBase64ContentBlock = {
+  type: "audio";
+  content_type: string;
+  data: string;
+};
+
+export type FileBase64ContentBlock = {
+  type: "file";
+  content_type: string;
+  data: string;
+  filename: string;
+};
+
+export type SimpleMediaContentBlock =
+  | TextContentBlock
+  | ImageUrlContentBlock
+  | ImageBase64ContentBlock
+  | AudioBase64ContentBlock
+  | FileBase64ContentBlock;
+
+// Legacy type aliases for backward compatibility
+export type MediaContentUrl = ImageUrlContentBlock;
+export type MediaContentBase64 =
+  | ImageBase64ContentBlock
+  | AudioBase64ContentBlock
+  | FileBase64ContentBlock;
 
 /**
  * @deprecated Use ProviderMessage instead.
@@ -239,33 +227,39 @@ export class AnthropicLLMAdapter implements ILLMAdapter<ProviderMessage[]> {
       .map((message) => {
         if (Array.isArray(message.content)) {
           const newContent = message.content.map((item) => {
-            if (
-              "slot_type" in item &&
-              ["audio", "video"].includes(item.slot_type)
-            ) {
+            if (item.type === "audio") {
               throw freeplayError(
                 "Anthropic does not support audio or video content",
               );
             }
 
-            if (isMediaContentUrl(item)) {
+            if (item.type === "image_url") {
               return {
-                type: item.slot_type === "image" ? "image" : "document",
+                type: "image",
                 source: {
                   type: "url",
                   url: item.url,
                 },
               };
-            } else if (isMediaContentBase64(item)) {
+            } else if (item.type === "image") {
               return {
-                type: item.slot_type === "image" ? "image" : "document",
+                type: "image",
                 source: {
                   type: "base64",
                   media_type: item.content_type,
                   data: item.data,
                 },
               };
-            } else if (isTextContent(item)) {
+            } else if (item.type === "file") {
+              return {
+                type: "document",
+                source: {
+                  type: "base64",
+                  media_type: item.content_type,
+                  data: item.data,
+                },
+              };
+            } else if (item.type === "text") {
               return {
                 type: "text",
                 text: item.text,
@@ -294,19 +288,35 @@ export class OpenAILLMAdapter implements ILLMAdapter<ProviderMessage[]> {
     return messages.map((message) => {
       if (Array.isArray(message.content)) {
         const newContent = message.content.map((item) => {
-          if (isMediaContentUrl(item)) {
-            if (item.slot_type !== "image") {
-              throw freeplayError(
-                "Message contains a non-image URL, but OpenAI only supports image URLs.",
-              );
-            }
+          if (item.type === "image_url") {
             return {
               type: "image_url",
               image_url: { url: item.url },
             };
-          } else if (isMediaContentBase64(item)) {
-            return this.format_base64_content(item);
-          } else if (isTextContent(item)) {
+          } else if (item.type === "image") {
+            return {
+              type: "image_url",
+              image_url: {
+                url: `data:${item.content_type};base64,${item.data}`,
+              },
+            };
+          } else if (item.type === "audio") {
+            return {
+              type: "input_audio",
+              input_audio: {
+                data: item.data,
+                format: item.content_type.split("/")[1].replace("mpeg", "mp3"),
+              },
+            };
+          } else if (item.type === "file") {
+            return {
+              type: "file",
+              file: {
+                filename: item.filename,
+                file_data: `data:${item.content_type};base64,${item.data}`,
+              },
+            };
+          } else if (item.type === "text") {
             return {
               type: "text",
               text: item.text,
@@ -320,33 +330,6 @@ export class OpenAILLMAdapter implements ILLMAdapter<ProviderMessage[]> {
 
       return message;
     });
-  }
-
-  private format_base64_content(item: MediaContentBase64): Record<string, any> {
-    if (item.slot_type === "audio") {
-      return {
-        type: "input_audio",
-        input_audio: {
-          data: item.data,
-          format: item.content_type.split("/")[1].replace("mpeg", "mp3"),
-        },
-      };
-    } else if (item.slot_type === "file") {
-      return {
-        type: "file",
-        file: {
-          filename: `${item.slot_name}.${item.content_type.split("/")[1]}`,
-          file_data: `data:${item.content_type};base64,${item.data}`,
-        },
-      };
-    } else {
-      return {
-        type: "image_url",
-        image_url: {
-          url: `data:${item.content_type};base64,${item.data}`,
-        },
-      };
-    }
   }
 }
 
@@ -363,17 +346,25 @@ export class OpenAIResponsesAdapter implements ILLMAdapter<ProviderMessage[]> {
       .map((message) => {
         if (Array.isArray(message.content)) {
           const newContent = message.content.map((item) => {
-            if (isTextContent(item)) {
+            if (item.type === "text") {
               return { type: "input_text", text: item.text };
-            } else if (isMediaContentUrl(item)) {
-              if (item.slot_type !== "image") {
-                throw freeplayError(
-                  "Message contains a non-image URL, but OpenAI Responses API only supports image URLs.",
-                );
-              }
+            } else if (item.type === "image_url") {
               return { type: "input_image", image_url: item.url };
-            } else if (isMediaContentBase64(item)) {
-              return this.formatBase64Content(item);
+            } else if (item.type === "image") {
+              return {
+                type: "input_image",
+                image_url: `data:${item.content_type};base64,${item.data}`,
+              };
+            } else if (item.type === "audio") {
+              throw freeplayError(
+                "Audio content is not yet supported by the OpenAI Responses API.",
+              );
+            } else if (item.type === "file") {
+              return {
+                type: "input_file",
+                filename: item.filename,
+                file_data: `data:${item.content_type};base64,${item.data}`,
+              };
             }
             return item;
           });
@@ -383,27 +374,6 @@ export class OpenAIResponsesAdapter implements ILLMAdapter<ProviderMessage[]> {
 
         return { type: "message", ...message };
       });
-  }
-
-  private formatBase64Content(
-    item: MediaContentBase64,
-  ): Record<string, any> {
-    if (item.slot_type === "audio") {
-      throw freeplayError(
-        "Audio content is not yet supported by the OpenAI Responses API.",
-      );
-    } else if (item.slot_type === "file") {
-      return {
-        type: "input_file",
-        filename: `${item.slot_name}.${item.content_type.split("/")[1]}`,
-        file_data: `data:${item.content_type};base64,${item.data}`,
-      };
-    } else {
-      return {
-        type: "input_image",
-        image_url: `data:${item.content_type};base64,${item.data}`,
-      };
-    }
   }
 }
 
@@ -475,18 +445,22 @@ export class GeminiLLMAdapter implements ILLMAdapter<GeminiChatMessage[]> {
           };
         } else if (Array.isArray(message?.content)) {
           const parts = message.content.map((item): GeminiPart => {
-            if (isMediaContentUrl(item)) {
+            if (item.type === "image_url") {
               throw freeplayError(
                 "Message contains an image URL, but image URLs are not supported by Gemini",
               );
-            } else if (isMediaContentBase64(item)) {
+            } else if (
+              item.type === "image" ||
+              item.type === "audio" ||
+              item.type === "file"
+            ) {
               return {
                 inline_data: {
                   mime_type: item.content_type,
                   data: item.data,
                 },
               };
-            } else if (isTextContent(item)) {
+            } else if (item.type === "text") {
               return { text: item.text };
             }
 
@@ -555,37 +529,34 @@ export class BedrockConverseAdapter implements ILLMAdapter<ProviderMessage[]> {
         // Handle array content with potential media
         if (Array.isArray(message.content)) {
           const newContent = message.content.map((item) => {
-            if (isTextContent(item)) {
+            if (item.type === "text") {
               return { text: item.text };
-            } else if (isMediaContentBase64(item)) {
-              // Convert base64 media to Bedrock format
+            } else if (item.type === "image") {
               const formatStr = item.content_type.split("/")[1];
-
-              if (item.slot_type === "image") {
-                return {
-                  image: {
-                    format: formatStr,
-                    source: {
-                      bytes: Buffer.from(item.data, "base64"),
-                    },
+              return {
+                image: {
+                  format: formatStr,
+                  source: {
+                    bytes: Buffer.from(item.data, "base64"),
                   },
-                };
-              } else if (item.slot_type === "file") {
-                return {
-                  document: {
-                    format: formatStr,
-                    name: item.slot_name,
-                    source: {
-                      bytes: Buffer.from(item.data, "base64"),
-                    },
+                },
+              };
+            } else if (item.type === "file") {
+              const formatStr = item.content_type.split("/")[1];
+              return {
+                document: {
+                  format: formatStr,
+                  name: item.filename,
+                  source: {
+                    bytes: Buffer.from(item.data, "base64"),
                   },
-                };
-              } else {
-                throw new FreeplayConfigurationError(
-                  `Bedrock Converse does not support ${item.slot_type} content`,
-                );
-              }
-            } else if (isMediaContentUrl(item)) {
+                },
+              };
+            } else if (item.type === "audio") {
+              throw new FreeplayConfigurationError(
+                "Bedrock Converse does not support audio content",
+              );
+            } else if (item.type === "image_url") {
               throw new FreeplayConfigurationError(
                 "Bedrock Converse does not support URL-based media content",
               );

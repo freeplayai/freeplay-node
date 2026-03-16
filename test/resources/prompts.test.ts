@@ -30,17 +30,14 @@ describe("prompts", () => {
 
     expect(content).toEqual([
       {
-        content_part_type: "media_url",
+        type: "image_url",
         url: "https://localhost/image",
-        slot_name: "image-one",
-        slot_type: "image",
+        media_type: "image",
       },
       {
-        content_part_type: "media_base64",
+        type: "image",
         content_type: "image/jpeg",
         data: "some-base64-data",
-        slot_name: "image-two",
-        slot_type: "image",
       },
     ]);
   });

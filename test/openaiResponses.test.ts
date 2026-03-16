@@ -137,7 +137,7 @@ describe("OpenAIResponsesAdapter - content block types", () => {
       {
         role: "user",
         content: [
-          { content_part_type: "text", text: "Hello world" },
+          { type: "text", text: "Hello world" },
         ],
       },
     ];
@@ -158,12 +158,11 @@ describe("OpenAIResponsesAdapter - content block types", () => {
       {
         role: "user",
         content: [
-          { content_part_type: "text", text: "Describe this" },
+          { type: "text", text: "Describe this" },
           {
-            content_part_type: "media_url",
+            type: "image_url",
             url: "http://example.com/img.png",
-            slot_name: "image-1",
-            slot_type: "image",
+            media_type: "image",
           },
         ],
       },
@@ -189,11 +188,9 @@ describe("OpenAIResponsesAdapter - content block types", () => {
         role: "user",
         content: [
           {
-            content_part_type: "media_base64",
+            type: "image",
             content_type: "image/png",
             data: "abc123",
-            slot_name: "img",
-            slot_type: "image",
           },
         ],
       },
@@ -218,11 +215,10 @@ describe("OpenAIResponsesAdapter - content block types", () => {
         role: "user",
         content: [
           {
-            content_part_type: "media_base64",
+            type: "file",
             content_type: "application/pdf",
             data: "pdfdata",
-            slot_name: "doc",
-            slot_type: "file",
+            filename: "doc",
           },
         ],
       },
@@ -237,7 +233,7 @@ describe("OpenAIResponsesAdapter - content block types", () => {
         content: [
           {
             type: "input_file",
-            filename: "doc.pdf",
+            filename: "doc",
             file_data: "data:application/pdf;base64,pdfdata",
           },
         ],
@@ -251,11 +247,9 @@ describe("OpenAIResponsesAdapter - content block types", () => {
         role: "user",
         content: [
           {
-            content_part_type: "media_base64",
+            type: "audio",
             content_type: "audio/mpeg",
             data: "audiodata",
-            slot_name: "clip",
-            slot_type: "audio",
           },
         ],
       },

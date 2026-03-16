@@ -10,10 +10,9 @@ import {
   LLMAdapters,
   prepareMessages,
   LLMParameters,
-  MediaContentBase64,
-  MediaContentUrl,
   MediaInputMap,
   MediaSlot,
+  SimpleMediaContentBlock,
   Provider,
   ProviderInfo,
   ProviderMessage,
@@ -279,30 +278,44 @@ const isHistoryMessage = (
 export const extractMediaContent = (
   media: MediaInputMap,
   mediaSlots: MediaSlot[],
-): (MediaContentUrl | MediaContentBase64)[] => {
-  const mediaContent: (MediaContentUrl | MediaContentBase64)[] = [];
+): SimpleMediaContentBlock[] => {
+  const mediaContent: SimpleMediaContentBlock[] = [];
   mediaSlots.forEach((slot) => {
     const file = media[slot.placeholder_name];
     if (!file) {
       return;
     }
 
-    mediaContent.push(
-      file.type === "url"
-        ? {
-            slot_name: slot.placeholder_name,
-            content_part_type: "media_url",
-            slot_type: slot.type,
-            url: file.url,
-          }
-        : {
-            slot_name: slot.placeholder_name,
-            content_part_type: "media_base64",
-            content_type: file.content_type,
-            slot_type: slot.type,
-            data: file.data,
-          },
-    );
+    if (file.type === "url") {
+      // Only images support URL-based content
+      mediaContent.push({
+        type: "image_url",
+        url: file.url,
+        media_type: "image",
+      });
+    } else {
+      // base64 content — dispatch on slot.type
+      if (slot.type === "image") {
+        mediaContent.push({
+          type: "image",
+          content_type: file.content_type,
+          data: file.data,
+        });
+      } else if (slot.type === "audio") {
+        mediaContent.push({
+          type: "audio",
+          content_type: file.content_type,
+          data: file.data,
+        });
+      } else if (slot.type === "file") {
+        mediaContent.push({
+          type: "file",
+          content_type: file.content_type,
+          data: file.data,
+          filename: slot.placeholder_name,
+        });
+      }
+    }
   });
 
   return mediaContent;
@@ -370,7 +383,7 @@ export class TemplatePrompt {
           role: message.role,
           content: [
             {
-              content_part_type: "text",
+              type: "text",
               text: chatMessage.content,
             },
             ...mediaContent,
