@@ -494,7 +494,10 @@ export class BoundPrompt {
       if (
         Array.isArray(msg.content) &&
         msg.content.some(
-          (part: Record<string, any>) => "content_part_type" in part,
+          (part: unknown) =>
+            typeof part === "object" &&
+            part !== null &&
+            "content_part_type" in part,
         )
       ) {
         const formatted = llmAdapter.toLLMSyntax([msg]);
