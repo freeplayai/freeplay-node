@@ -2,11 +2,15 @@
 
 Notable additions, fixes, or breaking changes to the Freeplay SDK.
 
-## [0.6.2] - 2026-03-10
+## [0.6.2] - 2026-03-16
 
 ### Added
 
 - **Test run status**: `TestRunResults` now includes a `status` field (`"complete"`, `"in-progress"`, `"failed"`, or `null`) from the Get Test Run Results API.
+
+### Deprecated
+
+- `FormattedPrompt.allMessages()` — use `llmPrompt` with completion output directly when constructing `RecordPayload`.
 
 ## [0.6.1] - 2026-03-10
 
