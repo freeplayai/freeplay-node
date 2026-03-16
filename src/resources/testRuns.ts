@@ -117,8 +117,9 @@ export class TestRuns {
       const description = response.data["description"];
       const summaryStatistics = response.data["summary_statistics"];
       const apiTestRunId = response.data["test_run_id"];
+      const status = response.data["status"] ?? null;
 
-      return { name, description, testRunId: apiTestRunId, summaryStatistics };
+      return { name, description, testRunId: apiTestRunId, summaryStatistics, status };
     } catch (error: any) {
       throw freeplayError("Unable to get test run.", error);
     }
@@ -219,4 +220,5 @@ export type TestRunResults = {
   readonly description: string;
   readonly testRunId: string;
   readonly summaryStatistics: SummaryStatistics;
+  readonly status: string | null;
 };
