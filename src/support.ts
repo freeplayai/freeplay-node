@@ -472,6 +472,31 @@ export class CallSupport {
     }
   }
 
+  async updateTrace(
+    projectId: string,
+    sessionId: string,
+    traceId: string,
+    output?: JSONValue,
+    evalResults?: Record<string, number | boolean>,
+  ): Promise<void> {
+    const url = `v2/projects/${projectId}/sessions/${sessionId}/traces/id/${traceId}`;
+    const body: Record<string, unknown> = {};
+    if (output !== undefined) {
+      body.output = output;
+    }
+    if (evalResults !== undefined) {
+      body.eval_results = evalResults;
+    }
+    try {
+      await this.httpPatch(url, body);
+    } catch (e: any) {
+      throw freeplayError(
+        `Unable to update trace ${traceId} in project ${projectId}`,
+        e,
+      );
+    }
+  }
+
   async httpGet<R = any>(url: string): Promise<AxiosResponse<R>> {
     return await axios.get(`${this.freeplayURL}/${url}`, this.axiosConfig);
   }
