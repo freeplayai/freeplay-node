@@ -87,6 +87,115 @@ describe("Traces Update", () => {
       expect(body.output).toBe("new output text");
       expect(body.eval_results).toEqual({ score: 0.8 });
     });
+
+    test("updates trace with metadata only", async () => {
+      axiosMock
+        .onPatch(
+          `${baseUrl}/v2/projects/${projectId}/sessions/${sessionId}/traces/id/${traceId}`,
+        )
+        .reply(200, { message: "Trace updated successfully" });
+
+      await expect(
+        freeplay.traces.update({
+          projectId,
+          sessionId,
+          traceId,
+          metadata: { env: "production", version: 2 },
+        }),
+      ).resolves.toBeUndefined();
+
+      expect(axiosMock.history.patch).toHaveLength(1);
+      const body = JSON.parse(axiosMock.history.patch[0].data);
+      expect(body.metadata).toEqual({ env: "production", version: 2 });
+      expect(body.output).toBeUndefined();
+      expect(body.eval_results).toBeUndefined();
+    });
+
+    test("updates trace with feedback only", async () => {
+      axiosMock
+        .onPatch(
+          `${baseUrl}/v2/projects/${projectId}/sessions/${sessionId}/traces/id/${traceId}`,
+        )
+        .reply(200, { message: "Trace updated successfully" });
+
+      await expect(
+        freeplay.traces.update({
+          projectId,
+          sessionId,
+          traceId,
+          feedback: { freeplay_feedback: "positive", custom_score: 0.9 },
+        }),
+      ).resolves.toBeUndefined();
+
+      expect(axiosMock.history.patch).toHaveLength(1);
+      const body = JSON.parse(axiosMock.history.patch[0].data);
+      expect(body.feedback).toEqual({
+        freeplay_feedback: "positive",
+        custom_score: 0.9,
+      });
+      expect(body.output).toBeUndefined();
+    });
+
+    test("updates trace with test run info only", async () => {
+      const testRunId = uuidv4();
+      const testCaseId = uuidv4();
+      axiosMock
+        .onPatch(
+          `${baseUrl}/v2/projects/${projectId}/sessions/${sessionId}/traces/id/${traceId}`,
+        )
+        .reply(200, { message: "Trace updated successfully" });
+
+      await expect(
+        freeplay.traces.update({
+          projectId,
+          sessionId,
+          traceId,
+          testRunInfo: { testRunId, testCaseId },
+        }),
+      ).resolves.toBeUndefined();
+
+      expect(axiosMock.history.patch).toHaveLength(1);
+      const body = JSON.parse(axiosMock.history.patch[0].data);
+      expect(body.test_run_info).toEqual({
+        test_run_id: testRunId,
+        test_case_id: testCaseId,
+      });
+      expect(body.output).toBeUndefined();
+    });
+
+    test("updates trace with all fields", async () => {
+      const testRunId = uuidv4();
+      const testCaseId = uuidv4();
+      axiosMock
+        .onPatch(
+          `${baseUrl}/v2/projects/${projectId}/sessions/${sessionId}/traces/id/${traceId}`,
+        )
+        .reply(200, { message: "Trace updated successfully" });
+
+      await expect(
+        freeplay.traces.update({
+          projectId,
+          sessionId,
+          traceId,
+          output: "updated",
+          metadata: { key: "value" },
+          feedback: { freeplay_feedback: "negative" },
+          evalResults: { accuracy: 0.99 },
+          testRunInfo: { testRunId, testCaseId },
+        }),
+      ).resolves.toBeUndefined();
+
+      expect(axiosMock.history.patch).toHaveLength(1);
+      const body = JSON.parse(axiosMock.history.patch[0].data);
+      expect(body.output).toBe("updated");
+      expect(body.metadata).toEqual({ key: "value" });
+      expect(body.feedback).toEqual({ freeplay_feedback: "negative" });
+      expect(body.eval_results).toEqual({ accuracy: 0.99 });
+      expect(body.test_run_info).toEqual({
+        test_run_id: testRunId,
+        test_case_id: testCaseId,
+      });
+    });
   });
 
   describe("URL construction", () => {
@@ -133,14 +242,16 @@ describe("Traces Update", () => {
   });
 
   describe("Error handling", () => {
-    test("throws when neither output nor evalResults provided", async () => {
+    test("throws when no update fields provided", async () => {
       await expect(
         freeplay.traces.update({
           projectId,
           sessionId,
           traceId,
         }),
-      ).rejects.toThrow("At least one of 'output' or 'evalResults'");
+      ).rejects.toThrow(
+        "At least one of 'output', 'metadata', 'feedback', 'evalResults', or 'testRunInfo'",
+      );
     });
 
     test("throws error on 404 not found", async () => {
