@@ -13,6 +13,7 @@ import {
   SpanKind,
 } from "./model.js";
 import { TemplateMessage } from "./resources/prompts";
+import { TraceTestRunInfo } from "./resources/traces.js";
 import {
   RecordPayload,
   RecordUpdatePayload,
@@ -467,6 +468,46 @@ export class CallSupport {
     } catch (e: any) {
       throw freeplayError(
         `Unable to update trace metadata for trace ${traceId} in project ${projectId}`,
+        e,
+      );
+    }
+  }
+
+  async updateTrace(
+    projectId: string,
+    sessionId: string,
+    traceId: string,
+    output?: JSONValue,
+    metadata?: CustomMetadata,
+    feedback?: Record<string, string | number | boolean>,
+    evalResults?: Record<string, number | boolean>,
+    testRunInfo?: TraceTestRunInfo,
+  ): Promise<void> {
+    const url = `v2/projects/${projectId}/sessions/${sessionId}/traces/id/${traceId}`;
+    const body: Record<string, unknown> = {};
+    if (output !== undefined) {
+      body.output = output;
+    }
+    if (metadata !== undefined) {
+      body.metadata = metadata;
+    }
+    if (feedback !== undefined) {
+      body.feedback = feedback;
+    }
+    if (evalResults !== undefined) {
+      body.eval_results = evalResults;
+    }
+    if (testRunInfo !== undefined) {
+      body.test_run_info = {
+        test_run_id: testRunInfo.testRunId,
+        test_case_id: testRunInfo.testCaseId,
+      };
+    }
+    try {
+      await this.httpPatch(url, body);
+    } catch (e: any) {
+      throw freeplayError(
+        `Unable to update trace ${traceId} in project ${projectId}`,
         e,
       );
     }

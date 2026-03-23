@@ -4,6 +4,7 @@ import { Prompts, TemplateResolver } from "./resources/prompts.js";
 import { Recordings } from "./resources/recordings.js";
 import { Sessions } from "./resources/sessions.js";
 import { TestRuns } from "./resources/testRuns.js";
+import { Traces } from "./resources/traces.js";
 import { CallSupport } from "./support.js";
 
 class Freeplay {
@@ -13,6 +14,7 @@ class Freeplay {
   readonly recordings: Recordings;
   readonly sessions: Sessions;
   readonly testRuns: TestRuns;
+  readonly traces: Traces;
 
   private readonly callSupport: CallSupport;
 
@@ -33,6 +35,7 @@ class Freeplay {
     this.recordings = new Recordings(this.callSupport);
     this.sessions = new Sessions(this.callSupport);
     this.testRuns = new TestRuns(this.callSupport);
+    this.traces = new Traces(this.callSupport);
   }
 }
 
@@ -47,3 +50,4 @@ export * from "./resources/prompts.js";
 export * from "./resources/recordings.js";
 export * from "./resources/sessions.js";
 export * from "./resources/testRuns.js";
+export * from "./resources/traces.js";
