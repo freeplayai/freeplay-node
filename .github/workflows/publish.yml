@@ -6,7 +6,7 @@ on:
       dry_run:
         description: "Perform a dry run (skip actual publishing)"
         type: boolean
-        default: false
+        default: false # Change to true when testing publish workflow
       release_type:
         description: "Type of release"
         type: choice
@@ -27,8 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: npm-publish
     permissions:
-      contents: write
-      id-token: write
+      contents: write # Needed for creating releases
+      id-token: write # Needed for npm OIDC authentication
 
     steps:
       - name: Checkout code
@@ -89,9 +89,9 @@ jobs:
       - name: Publish to npm (dry run)
         if: github.event.inputs.dry_run == 'true'
         run: |
-          echo "DRY RUN - Would publish version: ${{ steps.version.outputs.new_version }}"
+          echo "🔍 DRY RUN - Would publish version: ${{ steps.version.outputs.new_version }}"
           npm publish --dry-run --ignore-scripts
-          echo "Dry run completed successfully"
+          echo "✅ Dry run completed successfully"
 
       - name: Publish to npm
         if: github.event.inputs.dry_run == 'false'
