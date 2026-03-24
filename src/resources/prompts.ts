@@ -334,11 +334,6 @@ export class TemplatePrompt {
     const hasHistoryPlaceholder =
       this.messages.find(isHistoryMessage) != undefined;
 
-    if (history && !hasHistoryPlaceholder) {
-      throw freeplayError(
-        `History provided for template '${this.promptInfo.templateName}' that does not expect it.`,
-      );
-    }
     if (hasHistoryPlaceholder && history === undefined) {
       console.warn(
         `Template '${this.promptInfo.templateName}' expects history but none was provided.`,
@@ -378,6 +373,11 @@ export class TemplatePrompt {
         };
       },
     );
+
+    if (!hasHistoryPlaceholder && cleanHistory.length > 0) {
+      boundMessages.push(...cleanHistory);
+    }
+
     return new BoundPrompt(
       this.promptInfo,
       boundMessages,

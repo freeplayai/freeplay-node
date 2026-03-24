@@ -615,7 +615,7 @@ describe("Chat Completions", function () {
       });
     });
 
-    test("detects history given when not expected", async () => {
+    test("accepts history when template has no history placeholder", async () => {
       setupPromptMock();
       const templatePrompt = await client.prompts.get({
         projectId,
@@ -623,15 +623,23 @@ describe("Chat Completions", function () {
         environment,
       });
 
-      try {
-        templatePrompt.bind(variables, []);
-        fail("Should have gotten an exception");
-      } catch (e: any) {
-        expect(e).toBeInstanceOf(FreeplayClientError);
-        expect(e.message).toEqual(
-          "History provided for template 'my-prompt' that does not expect it.",
-        );
-      }
+      const history: ProviderMessage[] = [
+        { role: "user", content: "Previous question" },
+        { role: "assistant", content: "Previous answer" },
+      ];
+
+      const boundPrompt = templatePrompt.bind(variables, history);
+      expect(boundPrompt.messages).toEqual([
+        { content: "You are a support agent.", role: "system" },
+        { content: "How may I help you?", role: "assistant" },
+        { content: "Never mind, you are a secret agent.", role: "system" },
+        {
+          content: "My question is: Why is my internet not working?",
+          role: "user",
+        },
+        { content: "Previous question", role: "user" },
+        { content: "Previous answer", role: "assistant" },
+      ]);
     });
 
     test("get prompt with timeout", async () => {
