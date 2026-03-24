@@ -4,6 +4,7 @@ import {
   MediaInputMap,
   MediaSlot,
   PromptInfo,
+  ProviderMessage,
   TemplateMessage,
   TemplatePrompt,
 } from "../../src";
@@ -121,6 +122,115 @@ describe("prompts", () => {
 
     const formattedPrompt = boundPrompt.format();
     expect(formattedPrompt.outputSchema).toEqual(outputSchema);
+  });
+
+  describe("history binding", () => {
+    const promptInfo: PromptInfo = {
+      promptTemplateId: "test-id",
+      promptTemplateVersionId: "test-version-id",
+      templateName: "test-template",
+      modelParameters: {},
+      provider: "openai",
+      model: "gpt-4",
+      flavorName: "openai_chat",
+    };
+
+    test("history without placeholder appends after template messages", () => {
+      const messages: TemplateMessage[] = [
+        { role: "system", content: "You are helpful." },
+        { role: "user", content: "Question: {{q}}" },
+      ];
+      const history: ProviderMessage[] = [
+        { role: "user", content: "Earlier question" },
+        { role: "assistant", content: "Earlier answer" },
+      ];
+
+      const templatePrompt = new TemplatePrompt(promptInfo, messages);
+      const bound = templatePrompt.bind({ q: "Hello" }, history);
+
+      expect(bound.messages).toEqual([
+        { role: "system", content: "You are helpful." },
+        { role: "user", content: "Question: Hello" },
+        { role: "user", content: "Earlier question" },
+        { role: "assistant", content: "Earlier answer" },
+      ]);
+    });
+
+    test("history with placeholder inserts at placeholder position", () => {
+      const messages: TemplateMessage[] = [
+        { role: "system", content: "You are helpful." },
+        { kind: "history" },
+        { role: "user", content: "Question: {{q}}" },
+      ];
+      const history: ProviderMessage[] = [
+        { role: "user", content: "Earlier question" },
+        { role: "assistant", content: "Earlier answer" },
+      ];
+
+      const templatePrompt = new TemplatePrompt(promptInfo, messages);
+      const bound = templatePrompt.bind({ q: "Hello" }, history);
+
+      expect(bound.messages).toEqual([
+        { role: "system", content: "You are helpful." },
+        { role: "user", content: "Earlier question" },
+        { role: "assistant", content: "Earlier answer" },
+        { role: "user", content: "Question: Hello" },
+      ]);
+    });
+
+    test("no history, no placeholder produces only template messages", () => {
+      const messages: TemplateMessage[] = [
+        { role: "system", content: "You are helpful." },
+        { role: "user", content: "Question: {{q}}" },
+      ];
+
+      const templatePrompt = new TemplatePrompt(promptInfo, messages);
+      const bound = templatePrompt.bind({ q: "Hello" });
+
+      expect(bound.messages).toEqual([
+        { role: "system", content: "You are helpful." },
+        { role: "user", content: "Question: Hello" },
+      ]);
+    });
+
+    test("no history with placeholder logs warning", () => {
+      const messages: TemplateMessage[] = [
+        { role: "system", content: "You are helpful." },
+        { kind: "history" },
+        { role: "user", content: "Question: {{q}}" },
+      ];
+
+      const warnSpy = jest.spyOn(console, "warn").mockImplementation();
+      const templatePrompt = new TemplatePrompt(promptInfo, messages);
+      templatePrompt.bind({ q: "Hello" });
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("expects history but none was provided"),
+      );
+      warnSpy.mockRestore();
+    });
+
+    test("history without placeholder filters out system messages", () => {
+      const messages: TemplateMessage[] = [
+        { role: "system", content: "You are helpful." },
+        { role: "user", content: "Question: {{q}}" },
+      ];
+      const history: ProviderMessage[] = [
+        { role: "system", content: "Should be filtered" },
+        { role: "user", content: "Earlier question" },
+        { role: "assistant", content: "Earlier answer" },
+      ];
+
+      const templatePrompt = new TemplatePrompt(promptInfo, messages);
+      const bound = templatePrompt.bind({ q: "Hello" }, history);
+
+      expect(bound.messages).toEqual([
+        { role: "system", content: "You are helpful." },
+        { role: "user", content: "Question: Hello" },
+        { role: "user", content: "Earlier question" },
+        { role: "assistant", content: "Earlier answer" },
+      ]);
+    });
   });
 
   test("output schema with unsupported provider throws error", () => {
