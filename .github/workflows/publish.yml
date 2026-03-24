@@ -6,7 +6,7 @@ on:
       dry_run:
         description: "Perform a dry run (skip actual publishing)"
         type: boolean
-        default: false # Change to true when testing publish workflow
+        default: false
       release_type:
         description: "Type of release"
         type: choice
@@ -19,21 +19,25 @@ concurrency:
   group: "publish-npm"
   cancel-in-progress: true
 
+permissions: {}
+
 jobs:
   publish:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    environment: npm-publish
     permissions:
-      contents: write # Needed for creating releases
-      id-token: write # Needed for npm OIDC authentication
+      contents: write
+      id-token: write
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "24"
           cache: "npm"
@@ -85,22 +89,22 @@ jobs:
       - name: Publish to npm (dry run)
         if: github.event.inputs.dry_run == 'true'
         run: |
-          echo "🔍 DRY RUN - Would publish version: ${{ steps.version.outputs.new_version }}"
+          echo "DRY RUN - Would publish version: ${{ steps.version.outputs.new_version }}"
           npm publish --dry-run --ignore-scripts
-          echo "✅ Dry run completed successfully"
+          echo "Dry run completed successfully"
 
       - name: Publish to npm
         if: github.event.inputs.dry_run == 'false'
         run: |
           if [ "${{ steps.version.outputs.is_prerelease }}" = "true" ]; then
-            npm publish --tag alpha --ignore-scripts
+            npm publish --tag alpha --provenance --ignore-scripts
           else
-            npm publish --ignore-scripts
+            npm publish --provenance --ignore-scripts
           fi
 
       - name: Create GitHub Release
         if: github.event.inputs.dry_run == 'false'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2
         with:
           tag_name: v${{ steps.version.outputs.new_version }}
           name: Release v${{ steps.version.outputs.new_version }}
