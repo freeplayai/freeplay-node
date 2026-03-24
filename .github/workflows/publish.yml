@@ -19,21 +19,25 @@ concurrency:
   group: "publish-npm"
   cancel-in-progress: true
 
+permissions: {}
+
 jobs:
   publish:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    environment: npm-publish
     permissions:
       contents: write # Needed for creating releases
       id-token: write # Needed for npm OIDC authentication
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "24"
           cache: "npm"
@@ -92,7 +96,8 @@ jobs:
       - name: Publish to npm
         if: github.event.inputs.dry_run == 'false'
         run: |
-          if [ "${{ steps.version.outputs.is_prerelease }}" = "true" ]; then
+          # https://docs.npmjs.com/trusted-publishers - provenance flag is not needed (automatic) 
+          if [ "${{ steps.version.outputs.is_prerelease }}" = "true" ]; then 
             npm publish --tag alpha --ignore-scripts
           else
             npm publish --ignore-scripts
@@ -100,7 +105,7 @@ jobs:
 
       - name: Create GitHub Release
         if: github.event.inputs.dry_run == 'false'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2
         with:
           tag_name: v${{ steps.version.outputs.new_version }}
           name: Release v${{ steps.version.outputs.new_version }}
