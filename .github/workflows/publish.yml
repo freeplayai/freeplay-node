@@ -96,10 +96,11 @@ jobs:
       - name: Publish to npm
         if: github.event.inputs.dry_run == 'false'
         run: |
-          if [ "${{ steps.version.outputs.is_prerelease }}" = "true" ]; then
-            npm publish --tag alpha --provenance --ignore-scripts
+          # https://docs.npmjs.com/trusted-publishers - provenance flag is not needed (automatic) 
+          if [ "${{ steps.version.outputs.is_prerelease }}" = "true" ]; then 
+            npm publish --tag alpha --ignore-scripts
           else
-            npm publish --provenance --ignore-scripts
+            npm publish --ignore-scripts
           fi
 
       - name: Create GitHub Release
