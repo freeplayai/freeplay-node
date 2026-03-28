@@ -1,6 +1,6 @@
 import eslint from "@eslint/js";
 import eslintConfigPrettier from "eslint-config-prettier";
-import importPlugin from "eslint-plugin-import";
+import importPlugin from "eslint-plugin-import-x";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
@@ -11,12 +11,11 @@ export default tseslint.config(
   eslint.configs.recommended,
   importPlugin.flatConfigs.recommended,
   importPlugin.flatConfigs.typescript,
-  // eslint-disable-next-line import/no-named-as-default-member
   tseslint.configs.recommended,
   eslintConfigPrettier,
   {
     settings: {
-      "import/resolver": {
+      "import-x/resolver": {
         typescript: {
           alwaysTryTypes: true,
           project: "./tsconfig.json",
@@ -30,7 +29,7 @@ export default tseslint.config(
       },
     },
     rules: {
-      "import/order": "error",
+      "import-x/order": "error",
     },
   },
   {
