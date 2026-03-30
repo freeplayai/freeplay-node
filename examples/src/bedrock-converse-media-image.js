@@ -19,7 +19,7 @@ async function loadImageFromUrl(imageUrl) {
   const contentType = response.headers.get("content-type") || "";
 
   // Determine format from content-type or URL
-  let imageFormat = "jpeg";
+  let imageFormat;
   if (contentType.includes("jpeg") || contentType.includes("jpg")) {
     imageFormat = "jpeg";
   } else if (contentType.includes("png")) {
