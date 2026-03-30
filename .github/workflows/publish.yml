@@ -29,6 +29,7 @@ jobs:
     permissions:
       contents: write # Needed for creating releases
       id-token: write # Needed for npm OIDC authentication
+      attestations: write # Needed for build provenance
 
     steps:
       - name: Checkout code
@@ -85,6 +86,12 @@ jobs:
 
       - name: Build package
         run: npm run build
+
+      - name: Generate build provenance attestation
+        if: github.event.inputs.dry_run == 'false'
+        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4.1.0
+        with:
+          subject-path: dist/*
 
       - name: Publish to npm (dry run)
         if: github.event.inputs.dry_run == 'true'
