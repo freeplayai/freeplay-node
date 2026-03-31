@@ -32,9 +32,6 @@
     "url": "https://github.com/freeplayai/freeplay-node/issues"
   },
   "homepage": "https://github.com/freeplayai/freeplay-node#readme",
-  "engines": {
-    "npm": ">=11.10.0"
-  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@google-cloud/vertexai": "^1.10.3",
