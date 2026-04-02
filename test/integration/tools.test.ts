@@ -22,8 +22,12 @@ describeIntegrationTest("tools_integration", () => {
     baseUrl: `${process.env["FREEPLAY_API_URL"]}/api`,
   });
 
-  const openai = new OpenAI({
-    apiKey: process.env["OPENAI_API_KEY"],
+  let openai: OpenAI;
+  
+  beforeAll(() => {
+    openai = new OpenAI({
+      apiKey: process.env["OPENAI_API_KEY"],
+    });
   });
 
   async function call(

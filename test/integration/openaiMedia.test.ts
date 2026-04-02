@@ -4,7 +4,6 @@ import OpenAI from "openai";
 import { ChatCompletionMessageParam } from "openai/resources/chat/completions/completions";
 import {
   describeIntegrationTest as describe,
-  requireEnv,
 } from "../test_support";
 import Freeplay, {
   getCallInfo,
@@ -14,13 +13,18 @@ import Freeplay, {
 } from "../../src";
 
 describe("openai media integration", () => {
-  const projectId = requireEnv("EXAMPLES_PROJECT_ID");
+  const projectId = process.env["EXAMPLES_PROJECT_ID"]!;
   const freeplay = new Freeplay({
-    freeplayApiKey: requireEnv("FREEPLAY_API_KEY"),
-    baseUrl: `${requireEnv("FREEPLAY_API_URL")}/api`,
+    freeplayApiKey: process.env["FREEPLAY_API_KEY"]!,
+    baseUrl: `${process.env["FREEPLAY_API_URL"]}/api`,
   });
-  const openai = new OpenAI({
-    apiKey: requireEnv("OPENAI_API_KEY"),
+  
+  let openai: OpenAI;
+  
+  beforeAll(() => {
+    openai = new OpenAI({
+      apiKey: process.env["OPENAI_API_KEY"]!,
+    });
   });
 
   async function call(
