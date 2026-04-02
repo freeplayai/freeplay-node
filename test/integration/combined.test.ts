@@ -17,16 +17,11 @@ describeIntegrationTest("combined_integration", () => {
     baseUrl: `${process.env["FREEPLAY_API_URL"]}/api`,
   });
 
-  let anthropic: Anthropic;
-  let openai: OpenAI;
-  
-  beforeAll(() => {
-    anthropic = new Anthropic({
-      apiKey: process.env["ANTHROPIC_API_KEY"],
-    });
-    openai = new OpenAI({
-      apiKey: process.env["OPENAI_API_KEY"],
-    });
+  const anthropic = new Anthropic({
+    apiKey: process.env["ANTHROPIC_API_KEY"],
+  });
+  const openai = new OpenAI({
+    apiKey: process.env["OPENAI_API_KEY"],
   });
 
   async function call<MessageType extends ProviderMessage>(

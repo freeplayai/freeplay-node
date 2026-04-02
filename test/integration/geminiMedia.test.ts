@@ -3,6 +3,7 @@ import * as path from "node:path";
 import { Content, GoogleGenerativeAI } from "@google/generative-ai";
 import {
   describeIntegrationTest as describe,
+  requireEnv,
 } from "../test_support";
 import Freeplay, {
   getCallInfo,
@@ -12,17 +13,12 @@ import Freeplay, {
 } from "../../src";
 
 describe("gemini media integration", () => {
-  const projectId = process.env["EXAMPLES_PROJECT_ID"]!;
+  const projectId = requireEnv("EXAMPLES_PROJECT_ID");
   const freeplay = new Freeplay({
-    freeplayApiKey: process.env["FREEPLAY_API_KEY"]!,
-    baseUrl: `${process.env["FREEPLAY_API_URL"]}/api`,
+    freeplayApiKey: requireEnv("FREEPLAY_API_KEY"),
+    baseUrl: `${requireEnv("FREEPLAY_API_URL")}/api`,
   });
-  
-  let genAI: GoogleGenerativeAI;
-  
-  beforeAll(() => {
-    genAI = new GoogleGenerativeAI(process.env["GEMINI_API_KEY"]!);
-  });
+  const genAI = new GoogleGenerativeAI(requireEnv("GEMINI_API_KEY"));
 
   async function call(
     templateName: string,

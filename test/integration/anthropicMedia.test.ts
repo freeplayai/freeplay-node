@@ -14,21 +14,18 @@ import Freeplay, {
 } from "../../src";
 import {
   describeIntegrationTest as describe,
+  requireEnv,
 } from "../test_support";
 
 describe("anthropic media integration", () => {
-  const projectId = process.env["EXAMPLES_PROJECT_ID"]!;
+  const projectId = requireEnv("EXAMPLES_PROJECT_ID");
   const freeplay = new Freeplay({
-    freeplayApiKey: process.env["FREEPLAY_API_KEY"]!,
-    baseUrl: `${process.env["FREEPLAY_API_URL"]}/api`,
+    freeplayApiKey: requireEnv("FREEPLAY_API_KEY"),
+    baseUrl: `${requireEnv("FREEPLAY_API_URL")}/api`,
   });
 
-  let anthropic: Anthropic;
-  
-  beforeAll(() => {
-    anthropic = new Anthropic({
-      apiKey: process.env["ANTHROPIC_API_KEY"]!,
-    });
+  const anthropic = new Anthropic({
+    apiKey: requireEnv("ANTHROPIC_API_KEY"),
   });
 
   async function call(

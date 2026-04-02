@@ -5,13 +5,14 @@ import Freeplay, {
 } from "../../src";
 import {
   describeIntegrationTest as describe,
+  requireEnv,
 } from "../test_support";
 
 describe("bedrock converse integration", () => {
-  const projectId = process.env["EXAMPLES_PROJECT_ID"]!;
+  const projectId = requireEnv("EXAMPLES_PROJECT_ID");
   const freeplay = new Freeplay({
-    freeplayApiKey: process.env["FREEPLAY_API_KEY"]!,
-    baseUrl: `${process.env["FREEPLAY_API_URL"]}/api`,
+    freeplayApiKey: requireEnv("FREEPLAY_API_KEY"),
+    baseUrl: `${requireEnv("FREEPLAY_API_URL")}/api`,
   });
 
   test("basic converse", async () => {
@@ -23,8 +24,8 @@ describe("bedrock converse integration", () => {
     const converseClient = new BedrockRuntimeClient({
       region: "us-east-1",
       credentials: {
-        accessKeyId: process.env["AWS_ACCESS_KEY_ID"]!,
-        secretAccessKey: process.env["AWS_SECRET_ACCESS_KEY"]!,
+        accessKeyId: requireEnv("AWS_ACCESS_KEY_ID"),
+        secretAccessKey: requireEnv("AWS_SECRET_ACCESS_KEY"),
       },
     });
     const session = freeplay.sessions.create();
@@ -99,8 +100,8 @@ describe("bedrock converse integration", () => {
     const converseClient = new BedrockRuntimeClient({
       region: "us-east-1",
       credentials: {
-        accessKeyId: process.env["AWS_ACCESS_KEY_ID"]!,
-        secretAccessKey: process.env["AWS_SECRET_ACCESS_KEY"]!,
+        accessKeyId: requireEnv("AWS_ACCESS_KEY_ID"),
+        secretAccessKey: requireEnv("AWS_SECRET_ACCESS_KEY"),
       },
     });
     const session = freeplay.sessions.create();
