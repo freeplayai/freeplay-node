@@ -16,14 +16,19 @@ type OpenAIResponseMessage = ProviderMessage & {
 };
 
 describeIntegrationTest("tools_integration", () => {
-  const projectId = process.env["EXAMPLES_PROJECT_ID"]!;
-  const freeplay = new Freeplay({
-    freeplayApiKey: process.env["FREEPLAY_API_KEY"]!,
-    baseUrl: `${process.env["FREEPLAY_API_URL"]}/api`,
-  });
+  let projectId: string;
+  let freeplay: Freeplay;
+  let openai: OpenAI;
 
-  const openai = new OpenAI({
-    apiKey: process.env["OPENAI_API_KEY"],
+  beforeAll(() => {
+    projectId = process.env["EXAMPLES_PROJECT_ID"]!;
+    freeplay = new Freeplay({
+      freeplayApiKey: process.env["FREEPLAY_API_KEY"]!,
+      baseUrl: `${process.env["FREEPLAY_API_URL"]}/api`,
+    });
+    openai = new OpenAI({
+      apiKey: process.env["OPENAI_API_KEY"],
+    });
   });
 
   async function call(
