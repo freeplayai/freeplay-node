@@ -8,6 +8,7 @@ import {
   InputVariables,
   isSystemMessage,
   LLMAdapters,
+  mapParametersForGemini,
   prepareMessages,
   LLMParameters,
   MediaContentBase64,
@@ -470,13 +471,28 @@ export class BoundPrompt {
   ): FormattedPrompt<MessageType> {
     const finalFlavor = flavorName || this.promptInfo.flavorName;
     const llmAdapter = LLMAdapters.adapterForFlavor(finalFlavor);
-    const effectivePromptInfo = flavorName
-      ? {
-          ...this.promptInfo,
-          flavorName: finalFlavor,
-          provider: llmAdapter.provider(),
-        }
-      : this.promptInfo;
+
+    const isGemini =
+      finalFlavor === "gemini_chat" || finalFlavor === "gemini_api_chat";
+    const effectiveModelParameters = isGemini
+      ? mapParametersForGemini(this.promptInfo.modelParameters)
+      : this.promptInfo.modelParameters;
+
+    const paramsChanged =
+      effectiveModelParameters !== this.promptInfo.modelParameters;
+    const flavorChanged = !!flavorName;
+
+    let effectivePromptInfo: PromptInfo;
+    if (paramsChanged || flavorChanged) {
+      effectivePromptInfo = {
+        ...this.promptInfo,
+        flavorName: finalFlavor,
+        provider: llmAdapter.provider(),
+        modelParameters: effectiveModelParameters,
+      };
+    } else {
+      effectivePromptInfo = this.promptInfo;
+    }
     const prepared = prepareMessages(
       this.messages,
       llmAdapter.roleSupport,

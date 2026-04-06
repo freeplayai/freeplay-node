@@ -1,6 +1,7 @@
 import {
   BoundPrompt,
   extractMediaContent,
+  mapParametersForGemini,
   MediaInputMap,
   MediaSlot,
   PromptInfo,
@@ -230,6 +231,147 @@ describe("prompts", () => {
         { role: "user", content: "Earlier question" },
         { role: "assistant", content: "Earlier answer" },
       ]);
+    });
+  });
+
+  describe("mapParametersForGemini", () => {
+    test("renames max_tokens to max_output_tokens", () => {
+      const result = mapParametersForGemini({ max_tokens: 1024 });
+      expect(result).toEqual({ max_output_tokens: 1024 });
+    });
+
+    test("converts string thinking_level to thinking_config", () => {
+      const result = mapParametersForGemini({ thinking_level: "Medium" });
+      expect(result).toEqual({
+        thinking_config: { thinking_level: "medium" },
+      });
+    });
+
+    test("converts numeric thinking_level to thinking_config with budget", () => {
+      const result = mapParametersForGemini({ thinking_level: 4096 });
+      expect(result).toEqual({
+        thinking_config: { thinking_budget: 4096 },
+      });
+    });
+
+    test("truncates float thinking_level to integer budget", () => {
+      const result = mapParametersForGemini({ thinking_level: 2048.7 });
+      expect(result).toEqual({
+        thinking_config: { thinking_budget: 2048 },
+      });
+    });
+
+    test("passes through temperature and other keys unchanged", () => {
+      const result = mapParametersForGemini({
+        temperature: 0.7,
+        top_p: 0.9,
+      });
+      expect(result).toEqual({ temperature: 0.7, top_p: 0.9 });
+    });
+
+    test("handles all transformations together", () => {
+      const result = mapParametersForGemini({
+        max_tokens: 512,
+        thinking_level: "high",
+        temperature: 0.5,
+      });
+      expect(result).toEqual({
+        max_output_tokens: 512,
+        thinking_config: { thinking_level: "high" },
+        temperature: 0.5,
+      });
+    });
+
+    test("deep-clones nested values", () => {
+      const nested = { custom: { nested: [1, 2, 3] } };
+      const result = mapParametersForGemini(nested);
+      expect(result).toEqual(nested);
+      expect(result["custom"]).not.toBe(nested["custom"]);
+    });
+
+    test("returns empty object for empty input", () => {
+      expect(mapParametersForGemini({})).toEqual({});
+    });
+  });
+
+  describe("BoundPrompt.format() applies Gemini parameter mapping", () => {
+    const geminiPromptInfo = (
+      flavor: string,
+    ): PromptInfo => ({
+      promptTemplateId: "test-id",
+      promptTemplateVersionId: "test-version-id",
+      templateName: "test-template",
+      modelParameters: { max_tokens: 1024, temperature: 0.5 },
+      provider: "vertex",
+      model: "gemini-2.0-flash",
+      flavorName: flavor,
+    });
+
+    test("maps parameters for gemini_chat flavor", () => {
+      const bound = new BoundPrompt(
+        geminiPromptInfo("gemini_chat"),
+        [{ role: "user", content: "Hello" }],
+      );
+      const formatted = bound.format();
+      expect(formatted.promptInfo.modelParameters).toEqual({
+        max_output_tokens: 1024,
+        temperature: 0.5,
+      });
+    });
+
+    test("maps parameters for gemini_api_chat flavor", () => {
+      const bound = new BoundPrompt(
+        geminiPromptInfo("gemini_api_chat"),
+        [{ role: "user", content: "Hello" }],
+      );
+      const formatted = bound.format();
+      expect(formatted.promptInfo.modelParameters).toEqual({
+        max_output_tokens: 1024,
+        temperature: 0.5,
+      });
+    });
+
+    test("does not map parameters for non-Gemini flavors", () => {
+      const promptInfo: PromptInfo = {
+        promptTemplateId: "test-id",
+        promptTemplateVersionId: "test-version-id",
+        templateName: "test-template",
+        modelParameters: { max_tokens: 1024, temperature: 0.5 },
+        provider: "openai",
+        model: "gpt-4",
+        flavorName: "openai_chat",
+      };
+
+      const bound = new BoundPrompt(promptInfo, [
+        { role: "user", content: "Hello" },
+      ]);
+      const formatted = bound.format();
+      expect(formatted.promptInfo.modelParameters).toEqual({
+        max_tokens: 1024,
+        temperature: 0.5,
+      });
+    });
+
+    test("maps parameters when overriding to gemini flavor", () => {
+      const promptInfo: PromptInfo = {
+        promptTemplateId: "test-id",
+        promptTemplateVersionId: "test-version-id",
+        templateName: "test-template",
+        modelParameters: { max_tokens: 2048, thinking_level: "low" },
+        provider: "openai",
+        model: "gpt-4",
+        flavorName: "openai_chat",
+      };
+
+      const bound = new BoundPrompt(promptInfo, [
+        { role: "user", content: "Hello" },
+      ]);
+      const formatted = bound.format("gemini_api_chat");
+      expect(formatted.promptInfo.modelParameters).toEqual({
+        max_output_tokens: 2048,
+        thinking_config: { thinking_level: "low" },
+      });
+      expect(formatted.promptInfo.flavorName).toBe("gemini_api_chat");
     });
   });
 

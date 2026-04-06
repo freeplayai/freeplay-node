@@ -610,6 +610,39 @@ export class BedrockConverseAdapter implements ILLMAdapter<ProviderMessage[]> {
   }
 }
 
+function thinkingLevelToConfig(level: unknown): Record<string, any> {
+  if (typeof level === "string") {
+    return { thinking_level: level.trim().toLowerCase() };
+  }
+  if (typeof level === "number") {
+    return { thinking_budget: Math.trunc(level) };
+  }
+  return { thinking_level: String(level) };
+}
+
+/**
+ * Return a new LLMParameters object with keys mapped for Gemini / Vertex AI.
+ *
+ * - `max_tokens` is renamed to `max_output_tokens`
+ * - `thinking_level` is converted to a `thinking_config` dict
+ * - All other keys are passed through unchanged
+ */
+export function mapParametersForGemini(
+  params: LLMParameters,
+): LLMParameters {
+  const result: LLMParameters = {};
+  for (const [key, value] of Object.entries(params)) {
+    if (key === "max_tokens") {
+      result["max_output_tokens"] = value;
+    } else if (key === "thinking_level") {
+      result["thinking_config"] = thinkingLevelToConfig(value);
+    } else {
+      result[key] = structuredClone(value);
+    }
+  }
+  return result;
+}
+
 // Export additional types that were previously defined in the old model.ts
 export type FlavorSpecifier =
   | "openai_completion"
