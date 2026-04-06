@@ -9,15 +9,10 @@ import {
 } from "../test_support";
 
 describe("bedrock converse integration", () => {
-  let projectId: string;
-  let freeplay: Freeplay;
-
-  beforeAll(() => {
-    projectId = requireEnv("EXAMPLES_PROJECT_ID");
-    freeplay = new Freeplay({
-      freeplayApiKey: requireEnv("FREEPLAY_API_KEY"),
-      baseUrl: `${requireEnv("FREEPLAY_API_URL")}/api`,
-    });
+  const projectId = requireEnv("EXAMPLES_PROJECT_ID");
+  const freeplay = new Freeplay({
+    freeplayApiKey: requireEnv("FREEPLAY_API_KEY"),
+    baseUrl: `${requireEnv("FREEPLAY_API_URL")}/api`,
   });
 
   test("basic converse", async () => {

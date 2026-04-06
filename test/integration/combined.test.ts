@@ -11,23 +11,17 @@ import Freeplay, {
 import { describeIntegrationTest } from "../test_support";
 
 describeIntegrationTest("combined_integration", () => {
-  let projectId: string;
-  let freeplay: Freeplay;
-  let anthropic: Anthropic;
-  let openai: OpenAI;
+  const projectId = process.env["EXAMPLES_PROJECT_ID"]!;
+  const freeplay = new Freeplay({
+    freeplayApiKey: process.env["FREEPLAY_API_KEY"]!,
+    baseUrl: `${process.env["FREEPLAY_API_URL"]}/api`,
+  });
 
-  beforeAll(() => {
-    projectId = process.env["EXAMPLES_PROJECT_ID"]!;
-    freeplay = new Freeplay({
-      freeplayApiKey: process.env["FREEPLAY_API_KEY"]!,
-      baseUrl: `${process.env["FREEPLAY_API_URL"]}/api`,
-    });
-    anthropic = new Anthropic({
-      apiKey: process.env["ANTHROPIC_API_KEY"],
-    });
-    openai = new OpenAI({
-      apiKey: process.env["OPENAI_API_KEY"],
-    });
+  const anthropic = new Anthropic({
+    apiKey: process.env["ANTHROPIC_API_KEY"],
+  });
+  const openai = new OpenAI({
+    apiKey: process.env["OPENAI_API_KEY"],
   });
 
   async function call<MessageType extends ProviderMessage>(
