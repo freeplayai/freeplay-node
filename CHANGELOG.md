@@ -2,6 +2,13 @@
 
 Notable additions, fixes, or breaking changes to the Freeplay SDK.
 
+## [0.7.1] - 2026-04-15
+
+### Changed
+
+- Updated axios package.
+- Addressed several dependency updates
+
 ## [0.6.3] - 2026-03-24
 
 ### Changed

@@ -1,6 +1,6 @@
 {
   "name": "freeplay",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Node.js/Typescript SDK for Freeplay AI",
   "type": "module",
   "typesVersions": {
