@@ -2,6 +2,12 @@
 
 Notable additions, fixes, or breaking changes to the Freeplay SDK.
 
+## [0.7.3] - 2026-04-17
+
+### Changed
+
+Addressed protobuf package.
+
 ## [0.7.2] - 2026-04-15
 
 ### Changed
