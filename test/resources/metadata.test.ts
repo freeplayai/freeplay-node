@@ -18,7 +18,7 @@
  * Test coverage: 12 tests covering success paths, error handling, and edge cases.
  */
 
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID as uuidv4 } from "node:crypto";
 import Freeplay, { FreeplayClientError, FreeplayServerError } from "../../src";
 import { getAxiosMock } from "../test_support";
 
