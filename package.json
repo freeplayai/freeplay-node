@@ -65,6 +65,9 @@
     "openai": "^4.83.0",
     "uuid": "^9.0.0"
   },
+  "overrides": {
+    "fast-xml-parser": "^5.7.1"
+  },
   "scripts": {
     "safe-install": "npm ci && npm run allow-scripts:run",
     "allow-scripts:run": "allow-scripts run",
