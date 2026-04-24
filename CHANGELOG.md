@@ -6,7 +6,7 @@ Notable additions, fixes, or breaking changes to the Freeplay SDK.
 
 ### Changed
 
-- Bumped the SDK package version and exported it for runtime use.
+- Addressed the `uuid` CVE by switching UUID generation to Node's built-in `crypto.randomUUID()`.
 
 ## [0.7.3] - 2026-04-17
 
