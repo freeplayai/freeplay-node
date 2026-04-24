@@ -70,7 +70,6 @@
   "scripts": {
     "safe-install": "npm ci && npm run allow-scripts:run",
     "allow-scripts:run": "allow-scripts run",
-    "sync-version": "node scripts/sync-sdk-version.js",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "lint": "eslint .",
     "lint:fix": "npm run format && eslint . --fix",
