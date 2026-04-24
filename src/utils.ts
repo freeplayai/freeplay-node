@@ -1,5 +1,6 @@
 import * as os from "os";
-import { FREEPLAY_SDK_VERSION } from "./version.js";
+
+const FREEPLAY_SDK_VERSION = "0.7.4";
 
 export const getUserAgent = (): string => {
   const sdkName: string = "Freeplay";

@@ -44,7 +44,6 @@ export default Freeplay;
 export * from "./errors.js";
 export * from "./model.js";
 export * from "./support.js";
-export * from "./version.js";
 export * from "./resources/customerFeedback.js";
 export * from "./resources/metadata.js";
 export * from "./resources/prompts.js";
