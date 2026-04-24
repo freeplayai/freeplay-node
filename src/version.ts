@@ -1,2 +1,2 @@
-// This file is generated from package.json by scripts/sync-sdk-version.js.
+// Keep this in sync with package.json when bumping releases.
 export const FREEPLAY_SDK_VERSION = "0.7.4";
