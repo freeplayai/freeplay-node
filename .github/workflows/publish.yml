@@ -72,6 +72,7 @@ jobs:
         if: github.event.inputs.release_type == 'prerelease'
         run: |
           npm version ${{ steps.version.outputs.new_version }} --no-git-tag-version
+          node scripts/sync-sdk-version.js
 
       - name: Run tests
         run: npm test

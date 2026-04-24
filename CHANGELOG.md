@@ -2,6 +2,12 @@
 
 Notable additions, fixes, or breaking changes to the Freeplay SDK.
 
+## [0.7.4] - 2026-04-24
+
+### Changed
+
+- Bumped the SDK package version and exported it for runtime use.
+
 ## [0.7.3] - 2026-04-17
 
 ### Changed
