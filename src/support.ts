@@ -1,6 +1,6 @@
+import { randomUUID as uuidv4 } from "node:crypto";
 import axios, { AxiosResponse } from "axios";
 import * as Mustache from "mustache";
-import { randomUUID as uuidv4 } from "node:crypto";
 import { FreeplayClientError, freeplayError } from "./errors.js";
 import {
   CustomFeedback,
