@@ -1,6 +1,6 @@
 {
   "name": "freeplay",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "description": "Node.js/Typescript SDK for Freeplay AI",
   "type": "module",
   "typesVersions": {
@@ -40,7 +40,6 @@
     "@types/jest": "^29.5.2",
     "@types/mustache": "^4.2.6",
     "@types/node": "^20.3.2",
-    "@types/uuid": "^9.0.2",
     "axios-mock-adapter": "^1.21.5",
     "eslint": "^10.0.0",
     "eslint-config-prettier": "^9.1.0",
@@ -62,11 +61,11 @@
     "dotenv": "16.6.1",
     "encoding": "^0.1.13",
     "mustache": "^4.1.0",
-    "openai": "^4.83.0",
-    "uuid": "^9.0.0"
+    "openai": "^4.83.0"
   },
   "overrides": {
-    "fast-xml-parser": "^5.7.1"
+    "fast-xml-parser": "^5.7.1",
+    "gaxios": "^7.1.4"
   },
   "scripts": {
     "safe-install": "npm ci && npm run allow-scripts:run",
