@@ -65,7 +65,8 @@
   },
   "overrides": {
     "fast-xml-parser": "^5.7.1",
-    "gaxios": "^7.1.4"
+    "gaxios": "^7.1.4",
+    "protobufjs": "^7.5.8"
   },
   "scripts": {
     "safe-install": "npm ci && npm run allow-scripts:run",
