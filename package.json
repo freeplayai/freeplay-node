@@ -55,7 +55,7 @@
     "typescript-eslint": "^8.57.2"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.92.0",
+    "@anthropic-ai/sdk": "^0.96.0",
     "@aws-sdk/client-bedrock-runtime": "^3.901.0",
     "axios": "^1.8.2",
     "dotenv": "16.6.1",
