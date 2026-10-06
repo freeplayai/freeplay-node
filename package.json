@@ -36,6 +36,7 @@
     "@eslint/js": "^10.0.1",
     "@google-cloud/vertexai": "^1.10.3",
     "@google/generative-ai": "^0.24.1",
+    "@lavamoat/allow-scripts": "^3.4.3",
     "@types/jest": "^29.5.2",
     "@types/mustache": "^4.2.6",
     "@types/node": "^20.3.2",
@@ -72,7 +73,8 @@
     "tar": "^7.5.22"
   },
   "scripts": {
-    "safe-install": "npm ci --ignore-scripts",
+    "safe-install": "npm ci && npm run allow-scripts:run",
+    "allow-scripts:run": "allow-scripts run",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "lint": "eslint .",
     "lint:fix": "npm run format && eslint . --fix",
@@ -85,5 +87,14 @@
     "test:bedrock": "RUN_INTEGRATION_TESTS=true node --no-warnings node_modules/jest/bin/jest.js --runInBand bedrockConverse",
     "repl": "npx tsx scripts/repl-setup.ts",
     "prepublishOnly": "source .env.publish && npm run test && npm run build"
+  },
+  "lavamoat": {
+    "allowScripts": {
+      "$root$": false,
+      "eslint-import-resolver-typescript>unrs-resolver": false,
+      "tsx>esbuild": false,
+      "@google-cloud/vertexai>@google/genai>protobufjs": false,
+      "eslint-plugin-import-x>unrs-resolver": false
+    }
   }
 }

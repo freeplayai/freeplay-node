@@ -218,9 +218,6 @@ Before upgrading major versions, review the changelog.
 npm run safe-install
 ```
 
-`safe-install` disables all dependency lifecycle scripts with `npm ci --ignore-scripts`.
-No install scripts are currently required for building or testing this SDK.
-
 ## Support
 
 - **Docs**: https://docs.freeplay.ai
