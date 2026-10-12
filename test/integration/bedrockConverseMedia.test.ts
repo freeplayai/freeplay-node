@@ -13,10 +13,15 @@ import {
 } from "../test_support";
 
 describe("bedrock converse media integration", () => {
-  const projectId = requireEnv("EXAMPLES_PROJECT_ID");
-  const freeplay = new Freeplay({
-    freeplayApiKey: requireEnv("FREEPLAY_API_KEY"),
-    baseUrl: `${requireEnv("FREEPLAY_API_URL")}/api`,
+  let projectId: string;
+  let freeplay: Freeplay;
+
+  beforeAll(() => {
+    projectId = requireEnv("EXAMPLES_PROJECT_ID");
+    freeplay = new Freeplay({
+      freeplayApiKey: requireEnv("FREEPLAY_API_KEY"),
+      baseUrl: `${requireEnv("FREEPLAY_API_URL")}/api`,
+    });
   });
 
   async function call(
