@@ -14,13 +14,19 @@ import Freeplay, {
 } from "../../src";
 
 describe("openai media integration", () => {
-  const projectId = requireEnv("EXAMPLES_PROJECT_ID");
-  const freeplay = new Freeplay({
-    freeplayApiKey: requireEnv("FREEPLAY_API_KEY"),
-    baseUrl: `${requireEnv("FREEPLAY_API_URL")}/api`,
-  });
-  const openai = new OpenAI({
-    apiKey: requireEnv("OPENAI_API_KEY"),
+  let projectId: string;
+  let freeplay: Freeplay;
+  let openai: OpenAI;
+
+  beforeAll(() => {
+    projectId = requireEnv("EXAMPLES_PROJECT_ID");
+    freeplay = new Freeplay({
+      freeplayApiKey: requireEnv("FREEPLAY_API_KEY"),
+      baseUrl: `${requireEnv("FREEPLAY_API_URL")}/api`,
+    });
+    openai = new OpenAI({
+      apiKey: requireEnv("OPENAI_API_KEY"),
+    });
   });
 
   async function call(

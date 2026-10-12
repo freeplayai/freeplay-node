@@ -220,17 +220,15 @@ describe("Chat Completions", function () {
         },
       });
 
-      expect(allMessages).toEqual(
-        expect.objectContaining([
-          { content: "You are a support agent.", role: "system" },
-          { content: "How may I help you?", role: "assistant" },
-          { content: "Never mind, you are a secret agent.", role: "system" },
-          {
-            content: "My question is: Why is my internet not working?",
-            role: "user",
-          },
-        ]),
-      );
+      expect(allMessages.slice(0, 4)).toEqual([
+        { content: "You are a support agent.", role: "system" },
+        { content: "How may I help you?", role: "assistant" },
+        { content: "Never mind, you are a secret agent.", role: "system" },
+        {
+          content: "My question is: Why is my internet not working?",
+          role: "user",
+        },
+      ]);
 
       const recordRequestPayloads = getRequestPayloads(
         axiosMock,
@@ -295,9 +293,7 @@ describe("Chat Completions", function () {
       ]);
 
       const openAI = boundPrompt.format("openai_chat");
-      expect(openAI.llmPrompt as ProviderMessage[]).toEqual(
-        expect.objectContaining(promptContent),
-      );
+      expect(openAI.llmPrompt as ProviderMessage[]).toEqual(promptContent);
       expect(openAI.systemContent).toEqual("You are a support agent.");
 
       // Anthropic LLMPrompt does not contain system messages.
@@ -330,15 +326,13 @@ describe("Chat Completions", function () {
       // Uses what is effectively the OpenAI Format
       const basetenMistral = boundPrompt.format("baseten_mistral_chat");
       expect(basetenMistral.llmPrompt as ProviderMessage[]).toEqual(
-        expect.objectContaining(promptContent),
+        promptContent,
       );
       expect(basetenMistral.systemContent).toEqual("You are a support agent.");
 
       // Uses what is effectively the OpenAI Format
       const mistral = boundPrompt.format("mistral_chat");
-      expect(mistral.llmPrompt as ProviderMessage[]).toEqual(
-        expect.objectContaining(promptContent),
-      );
+      expect(mistral.llmPrompt as ProviderMessage[]).toEqual(promptContent);
       expect(mistral.systemContent).toEqual("You are a support agent.");
 
       // Gemini
@@ -351,14 +345,14 @@ describe("Chat Completions", function () {
         },
       ];
       expect(gemini.llmPrompt as ProviderMessage[]).toEqual(
-        expect.objectContaining(geminiExpected),
+        geminiExpected,
       );
       expect(gemini.systemContent).toEqual("You are a support agent.");
 
       // Gemini API (same formatting as gemini_chat)
       const geminiApi = boundPrompt.format("gemini_api_chat");
       expect(geminiApi.llmPrompt as ProviderMessage[]).toEqual(
-        expect.objectContaining(geminiExpected),
+        geminiExpected,
       );
       expect(geminiApi.systemContent).toEqual("You are a support agent.");
     });
@@ -706,7 +700,7 @@ describe("Chat Completions", function () {
         });
 
       expect(formattedPromptOpenAI.llmPrompt as ProviderMessage[]).toEqual(
-        expect.objectContaining(promptContent),
+        promptContent,
       );
       expect(formattedPromptOpenAI.systemContent).toEqual(
         "You are a support agent.",
@@ -2024,17 +2018,15 @@ describe("Chat Completions", function () {
         traceInfo: traceInfo,
       });
 
-      expect(allMessages).toEqual(
-        expect.objectContaining([
-          { content: "You are a support agent.", role: "system" },
-          { content: "How may I help you?", role: "assistant" },
-          { content: "Never mind, you are a secret agent.", role: "system" },
-          {
-            content: "My question is: Why is my internet not working?",
-            role: "user",
-          },
-        ]),
-      );
+      expect(allMessages.slice(0, 4)).toEqual([
+        { content: "You are a support agent.", role: "system" },
+        { content: "How may I help you?", role: "assistant" },
+        { content: "Never mind, you are a secret agent.", role: "system" },
+        {
+          content: "My question is: Why is my internet not working?",
+          role: "user",
+        },
+      ]);
 
       const recordRequestPayloads = getRequestPayloads(
         axiosMock,
