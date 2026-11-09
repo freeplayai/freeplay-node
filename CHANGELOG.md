@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.6] - 2026-11-09
+
+### Changed
+
+- Updated dependencies to address various CVEs, including the minimatch denial-of-service vulnerability (CVE-2026-118764), and related glob and ip-address security advisories.
+- Updated development tooling for compatibility with the patched dependencies.
+
 ## [0.7.5] - 2026-08-07
 
 ### Changed
